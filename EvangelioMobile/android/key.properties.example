@@ -1,0 +1,6 @@
+# Copia este archivo como key.properties (no lo subas a Git).
+# Genera el keystore con: scripts/Create-AndroidKeystore.ps1
+storePassword=TU_CLAVE_KEYSTORE
+keyPassword=TU_CLAVE_KEYSTORE
+keyAlias=evangelio
+storeFile=evangelio-release-key.jks

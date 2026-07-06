@@ -45,7 +45,7 @@ class _EvangelioMobileAppState extends State<EvangelioMobileApp> {
     }
 
     return MaterialApp(
-      title: 'Evangelio Mobile',
+      title: 'TuMirada',
       debugShowCheckedModeBanner: false,
       theme: ReligiousTheme.theme,
       home: home,
