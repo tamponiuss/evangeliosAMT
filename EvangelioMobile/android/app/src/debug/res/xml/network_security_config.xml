@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Build debug / profile: permite HTTP a IPs locales (teléfono físico contra PC en LAN) -->
+    <base-config cleartextTrafficPermitted="true"/>
+</network-security-config>
