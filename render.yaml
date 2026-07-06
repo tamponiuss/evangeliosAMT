@@ -4,8 +4,8 @@ services:
     name: evangelio-api
     runtime: node
     plan: free
-    rootDir: evangelio web/server
-    buildCommand: npm install && npm run build
+    rootDir: "evangelio web/server"
+    buildCommand: "npm install && npm run build"
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -14,7 +14,7 @@ services:
       - key: MONGODB_DB
         value: evangelios
       - key: JWT_EXPIRE
-        value: 8h
+        value: "8h"
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: EVANGELIO_PRECACHE_AL_INICIO
