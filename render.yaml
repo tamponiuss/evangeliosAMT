@@ -3,6 +3,7 @@ services:
   - type: web
     name: evangelio-api
     runtime: node
+    plan: free
     rootDir: evangelio web/server
     buildCommand: npm install && npm run build
     startCommand: npm start
