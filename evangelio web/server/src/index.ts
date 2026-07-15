@@ -89,18 +89,16 @@ async function main() {
 
   await conectarMongoDB();
 
-  if (!config.smtpPass) {
-
-    console.warn(
-
-      '[startup] Sin GMAIL_APP_PASSWORD: el registro no enviará correo (revisa server/.env y reinicia tras editar).'
-
-    );
-
+  if (config.brevoApiKey) {
+    console.log('[startup] Correo: Brevo API listo para códigos de registro.');
+  } else if (config.resendApiKey) {
+    console.log('[startup] Correo: Resend API listo para códigos de registro.');
+  } else if (config.smtpPass) {
+    console.log('[startup] Correo: Gmail SMTP configurado (en Render free puede fallar; preferible BREVO_API_KEY).');
   } else {
-
-    console.log('[startup] SMTP Gmail listo para enviar códigos de registro.');
-
+    console.warn(
+      '[startup] Sin BREVO_API_KEY / RESEND_API_KEY / GMAIL_APP_PASSWORD: el registro no enviará correo.'
+    );
   }
 
   app.listen(config.port, '0.0.0.0', () => {

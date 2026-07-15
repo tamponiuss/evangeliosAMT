@@ -20,8 +20,12 @@ export const config = {
   mailFrom: process.env.MAIL_FROM || 'tamponievangelio@gmail.com',
   /** Usuario SMTP (Gmail): suele ser el mismo correo. */
   smtpUser: process.env.GMAIL_USER || 'tamponievangelio@gmail.com',
-  /** Contraseña de aplicación de Google (16 caracteres; se eliminan espacios al cargar). */
+  /** Contraseña de aplicación de Google (16 caracteres; se eliminan espacios al cargar). En Render free SMTP suele fallar. */
   smtpPass: (process.env.GMAIL_APP_PASSWORD ?? '').replace(/\s+/g, ''),
+  /** Brevo (Sendinblue) API key — recomendado en Render (HTTPS, no SMTP). */
+  brevoApiKey: (process.env.BREVO_API_KEY ?? '').trim(),
+  /** Resend API key (alternativa HTTPS). */
+  resendApiKey: (process.env.RESEND_API_KEY ?? '').trim(),
   registroCodigoMinutos: Number(process.env.REGISTRO_CODIGO_MINUTOS) || 15,
   /** Opcional: dos reflexiones por IA (OpenAI). Sin clave se usan textos de respaldo. */
   openaiApiKey: process.env.OPENAI_API_KEY || '',
