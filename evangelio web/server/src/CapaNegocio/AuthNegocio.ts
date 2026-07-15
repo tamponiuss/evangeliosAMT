@@ -88,7 +88,15 @@ export const AuthNegocio = {
     );
     try {
       const correoEnviado = await enviarCodigoRegistro(emailNorm, codigo);
-      return { ok: true as const, correoEnviado };
+      if (!correoEnviado) {
+        await RegistroCodigoModel.deleteOne({ email: emailNorm });
+        const err: Error & { status?: number } = new Error(
+          'El servidor no tiene configurado el envío de correo. El administrador debe añadir GMAIL_APP_PASSWORD en Render.'
+        );
+        err.status = 503;
+        throw err;
+      }
+      return { ok: true as const, correoEnviado: true };
     } catch (e) {
       await RegistroCodigoModel.deleteOne({ email: emailNorm });
       throw e;

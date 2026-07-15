@@ -124,10 +124,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 8),
             Text(
               sinEnvioCorreo
-                  ? 'El servidor no tiene configurado el envío de correo (GMAIL_APP_PASSWORD). '
-                      'Mira la ventana de consola donde corre la API: allí aparece el código de 4 dígitos. '
-                      'Luego escríbelo aquí.'
-                  : 'Te enviamos un código de 4 dígitos al correo indicado. Revísalo y escribe el código aquí.',
+                  ? 'No se pudo enviar el correo desde el servidor. Revisa también la carpeta Spam. '
+                      'Si el problema continúa, el administrador debe actualizar GMAIL_APP_PASSWORD en Render.'
+                  : 'Te enviamos un código de 4 dígitos al correo indicado. Revisa bandeja de entrada y Spam.',
               style: TextStyle(fontSize: 14, height: 1.35, color: Colors.grey.shade800),
             ),
             const SizedBox(height: 12),
@@ -174,8 +173,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             SnackBar(
                               content: Text(
                                 enviado
-                                    ? 'Revisa tu correo: te enviamos un código de 4 dígitos.'
-                                    : 'No se envió correo: el código está en la consola del servidor (configura GMAIL_APP_PASSWORD en .env).',
+                                    ? 'Revisa tu correo (y Spam): te enviamos un código de 4 dígitos.'
+                                    : 'No se pudo enviar el correo. Contacta al administrador o inténtalo más tarde.',
                               ),
                             ),
                           );
@@ -235,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    enviado ? 'Se reenvió el código a tu correo.' : 'Sin correo SMTP: revisa la consola del servidor para el código.',
+                                    enviado ? 'Se reenvió el código a tu correo (revisa también Spam).' : 'No se pudo reenviar el correo. Inténtalo más tarde.',
                                   ),
                                 ),
                               );
