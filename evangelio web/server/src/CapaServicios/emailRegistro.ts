@@ -9,6 +9,9 @@ function crearTransport() {
     port: 465,
     secure: true,
     auth: { user, pass },
+    connectionTimeout: 20_000,
+    greetingTimeout: 20_000,
+    socketTimeout: 25_000,
   });
 }
 

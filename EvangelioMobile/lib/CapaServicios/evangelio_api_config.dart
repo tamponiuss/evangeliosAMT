@@ -14,6 +14,9 @@ import 'package:flutter/foundation.dart';
 class EvangelioApiConfig {
   EvangelioApiConfig._();
 
+  /// API de producción (Render). Se usa en release si no hay [EVANGELIO_API_BASE].
+  static const String productionApiBase = 'https://evangelio-api.onrender.com/api';
+
   /// Tiene prioridad sobre todo lo demás (incluye `/api` al final).
   static const String apiBaseOverride =
       String.fromEnvironment('EVANGELIO_API_BASE', defaultValue: '');
@@ -29,6 +32,10 @@ class EvangelioApiConfig {
       return trimOverride.endsWith('/')
           ? trimOverride.substring(0, trimOverride.length - 1)
           : trimOverride;
+    }
+    // Release / Play Store: siempre la API pública (antes caía en 10.0.2.2 y fallaba en el móvil).
+    if (kReleaseMode) {
+      return productionApiBase;
     }
     if (kIsWeb) {
       final u = Uri.base;

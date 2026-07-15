@@ -7,8 +7,15 @@ import 'evangelio_api_config.dart';
 class ApiService {
   static String get _base => EvangelioApiConfig.resolvedBaseUrl;
 
+  /// Render free puede “despertar” lento; registro/correo también tarda.
+  static const Duration _timeout = Duration(seconds: 90);
+
   Future<Map<String, dynamic>> get(String path, {String? token}) =>
-      _request(() => http.get(Uri.parse('$_base$path'), headers: _headers(token)));
+      _request(
+        () => http
+            .get(Uri.parse('$_base$path'), headers: _headers(token))
+            .timeout(_timeout),
+      );
 
   Future<Map<String, dynamic>> post(
     String path,
@@ -16,11 +23,13 @@ class ApiService {
     String? token,
   }) =>
       _request(
-        () => http.post(
-          Uri.parse('$_base$path'),
-          headers: _headers(token),
-          body: jsonEncode(body),
-        ),
+        () => http
+            .post(
+              Uri.parse('$_base$path'),
+              headers: _headers(token),
+              body: jsonEncode(body),
+            )
+            .timeout(_timeout),
       );
 
   Future<Map<String, dynamic>> put(
@@ -29,11 +38,13 @@ class ApiService {
     String? token,
   }) =>
       _request(
-        () => http.put(
-          Uri.parse('$_base$path'),
-          headers: _headers(token),
-          body: jsonEncode(body),
-        ),
+        () => http
+            .put(
+              Uri.parse('$_base$path'),
+              headers: _headers(token),
+              body: jsonEncode(body),
+            )
+            .timeout(_timeout),
       );
 
   Future<Map<String, dynamic>> _request(
@@ -78,29 +89,25 @@ class ApiService {
   /// Mensaje en español para fallos típicos (web o red).
   String? _mensajeFalloRed(Object error) {
     final s = error.toString().toLowerCase();
+    if (s.contains('timeout') || s.contains('timed out')) {
+      return 'El servidor tardó demasiado en responder. Espera unos segundos e inténtalo de nuevo '
+          '(la primera petición puede despertar la API en la nube).';
+    }
     if (s.contains('failed host lookup') ||
         s.contains('name or service not known')) {
-      return 'No hay resolución DNS hacia la API. Para otro PC o dominio usa '
-          '--dart-define=EVANGELIO_API_BASE=https://tu-servidor/api o '
-          'EVANGELIO_DEV_HOST=IP_en_LAN.';
+      return 'No hay resolución DNS hacia la API. Comprueba tu conexión a Internet.';
     }
     if (s.contains('failed to fetch')) {
-      return 'No se puede conectar a la API en el puerto 4000. Inicia el servidor '
-          '(npm run dev en la carpeta evangelio web/server, con MongoDB en ejecución). '
-          'Para que arranque solo al encender el PC, ejecuta una vez el script '
-          'scripts/Register-EvangelioApi-AutoStart.ps1 en la raíz del proyecto.';
+      return 'No se puede conectar a la API. Comprueba Internet y que el servidor esté activo.';
     }
     if (s.contains('connection refused') ||
         s.contains('connection reset') ||
         s.contains('socketexception') ||
         s.contains('network is unreachable') ||
         s.contains('network unreachable') ||
-        s.contains('clientexception')) {
-      return 'Sin conexión al servidor (puerto 4000). Comprueba que la API esté en marcha '
-          'y que la URL sea la correcta (release: --dart-define=EVANGELIO_API_BASE=…). '
-          'En un teléfono físico con el PC en la misma red: '
-          '--dart-define=EVANGELIO_DEV_HOST=IP_del_PC. '
-          'Arranque automático: scripts/Register-EvangelioApi-AutoStart.ps1.';
+        s.contains('clientexception') ||
+        s.contains('connection closed')) {
+      return 'Sin conexión al servidor. Comprueba Internet. API: ${EvangelioApiConfig.resolvedBaseUrl}';
     }
     return null;
   }
