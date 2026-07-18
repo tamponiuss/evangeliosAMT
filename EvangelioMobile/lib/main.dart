@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'CapaGUI/auth_controller.dart';
 import 'CapaGUI/screens/change_password_screen.dart';
+import 'CapaGUI/screens/delivery_preferences_screen.dart';
 import 'CapaGUI/screens/home_screen.dart';
 import 'CapaGUI/screens/login_screen.dart';
 import 'CapaGUI/screens/plus_upgrade_screen.dart';
@@ -57,6 +58,7 @@ class _EvangelioMobileAppState extends State<EvangelioMobileApp> {
         '/spiritual-filters': (_) => SpiritualFiltersScreen(auth: auth),
         '/plus-upgrade': (_) => PlusUpgradeScreen(auth: auth),
         '/change-password': (_) => ChangePasswordScreen(auth: auth),
+        '/delivery-preferences': (_) => DeliveryPreferencesScreen(auth: auth),
       },
     );
   }

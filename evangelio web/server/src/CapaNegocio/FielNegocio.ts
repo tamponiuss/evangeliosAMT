@@ -6,6 +6,13 @@ function aDTO(d: IFiel): FielRespuestaDTO {
   return {
     email: d.email,
     idPerfil: d.idPerfil,
+    numCelular: d.numCelular || '',
+    porEmail: Boolean(d.porEmail),
+    porAPP: d.porAPP !== false,
+    porWSP: Boolean(d.porWSP),
+    porInstagram: Boolean(d.porInstagram),
+    cuentaInstagram: d.cuentaInstagram || '',
+    horaEnvio: d.horaEnvio || '',
     idPapa: d.idPapa || '',
     congregaciones: d.congregaciones || [],
     idMirada: d.idMirada || '',
@@ -39,6 +46,13 @@ export const FielNegocio = {
       email: dto.email.toLowerCase().trim(),
       clave: hash,
       idPerfil: dto.idPerfil,
+      numCelular: '',
+      porEmail: false,
+      porAPP: true,
+      porWSP: false,
+      porInstagram: false,
+      cuentaInstagram: '',
+      horaEnvio: '',
       idPapa: '',
       congregaciones: [],
       idMirada: '',
@@ -52,6 +66,13 @@ export const FielNegocio = {
       clave?: string;
       idPerfil?: string;
       nuevoEmail?: string;
+      numCelular?: string;
+      porEmail?: boolean;
+      porAPP?: boolean;
+      porWSP?: boolean;
+      porInstagram?: boolean;
+      cuentaInstagram?: string;
+      horaEnvio?: string;
       idPapa?: string;
       congregaciones?: string[];
       idMirada?: string;
@@ -63,6 +84,13 @@ export const FielNegocio = {
     const e = email.toLowerCase();
     const set: Record<string, unknown> = {};
     if (dto.idPerfil !== undefined) set.idPerfil = dto.idPerfil;
+    if (dto.numCelular !== undefined) set.numCelular = String(dto.numCelular).trim();
+    if (dto.porEmail !== undefined) set.porEmail = Boolean(dto.porEmail);
+    if (dto.porAPP !== undefined) set.porAPP = Boolean(dto.porAPP);
+    if (dto.porWSP !== undefined) set.porWSP = Boolean(dto.porWSP);
+    if (dto.porInstagram !== undefined) set.porInstagram = Boolean(dto.porInstagram);
+    if (dto.cuentaInstagram !== undefined) set.cuentaInstagram = String(dto.cuentaInstagram).trim();
+    if (dto.horaEnvio !== undefined) set.horaEnvio = String(dto.horaEnvio).trim();
     if (dto.idPapa !== undefined) set.idPapa = dto.idPapa;
     if (dto.congregaciones !== undefined) set.congregaciones = dto.congregaciones;
     if (dto.idMirada !== undefined) set.idMirada = dto.idMirada;

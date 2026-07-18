@@ -12,6 +12,13 @@ class UsuarioMovil {
   final bool filtrosConfigurados;
   final String plusPagadoEn;
   final String plusReferenciaPago;
+  final bool porEmail;
+  final bool porAPP;
+  final bool porWSP;
+  final bool porInstagram;
+  final String numCelular;
+  final String cuentaInstagram;
+  final String horaEnvio;
 
   const UsuarioMovil({
     required this.email,
@@ -22,6 +29,13 @@ class UsuarioMovil {
     this.filtrosConfigurados = false,
     this.plusPagadoEn = '',
     this.plusReferenciaPago = '',
+    this.porEmail = false,
+    this.porAPP = true,
+    this.porWSP = false,
+    this.porInstagram = false,
+    this.numCelular = '',
+    this.cuentaInstagram = '',
+    this.horaEnvio = '',
   });
 
   factory UsuarioMovil.fromJson(Map<String, dynamic> json) => UsuarioMovil(
@@ -33,6 +47,13 @@ class UsuarioMovil {
             : const [],
         idMirada: (json['idMirada'] ?? '').toString(),
         filtrosConfigurados: json['filtrosConfigurados'] == true,
+        porEmail: json['porEmail'] == true,
+        porAPP: json['porAPP'] != false,
+        porWSP: json['porWSP'] == true,
+        porInstagram: json['porInstagram'] == true,
+        numCelular: (json['numCelular'] ?? '').toString(),
+        cuentaInstagram: (json['cuentaInstagram'] ?? '').toString(),
+        horaEnvio: (json['horaEnvio'] ?? '').toString(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -44,6 +65,44 @@ class UsuarioMovil {
         'filtrosConfigurados': filtrosConfigurados,
         'plusPagadoEn': plusPagadoEn,
         'plusReferenciaPago': plusReferenciaPago,
+        'porEmail': porEmail,
+        'porAPP': porAPP,
+        'porWSP': porWSP,
+        'porInstagram': porInstagram,
+        'numCelular': numCelular,
+        'cuentaInstagram': cuentaInstagram,
+        'horaEnvio': horaEnvio,
+      };
+}
+
+/// Preferencias de entrega del evangelio diario.
+class PreferenciasEntrega {
+  final bool porEmail;
+  final bool porAPP;
+  final bool porWSP;
+  final bool porInstagram;
+  final String numCelular;
+  final String cuentaInstagram;
+  final String horaEnvio;
+
+  const PreferenciasEntrega({
+    required this.porEmail,
+    required this.porAPP,
+    required this.porWSP,
+    required this.porInstagram,
+    this.numCelular = '',
+    this.cuentaInstagram = '',
+    this.horaEnvio = '',
+  });
+
+  Map<String, dynamic> toJson() => {
+        'porEmail': porEmail,
+        'porAPP': porAPP,
+        'porWSP': porWSP,
+        'porInstagram': porInstagram,
+        'numCelular': numCelular,
+        'cuentaInstagram': cuentaInstagram,
+        'horaEnvio': horaEnvio,
       };
 }
 

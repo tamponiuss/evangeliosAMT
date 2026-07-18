@@ -35,6 +35,13 @@ fielRutas.put('/:email', async (req, res) => {
       clave: req.body.clave,
       idPerfil: req.body.idPerfil,
       nuevoEmail: req.body.nuevoEmail,
+      numCelular: req.body.numCelular,
+      porEmail: req.body.porEmail,
+      porAPP: req.body.porAPP,
+      porWSP: req.body.porWSP,
+      porInstagram: req.body.porInstagram,
+      cuentaInstagram: req.body.cuentaInstagram,
+      horaEnvio: req.body.horaEnvio,
     });
     if (!f) {
       res.status(404).json({ error: 'No encontrado' });

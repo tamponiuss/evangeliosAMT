@@ -69,6 +69,13 @@ class AuthController extends ChangeNotifier {
     await _negocio.cambiarClave(token!, actual, nueva);
   }
 
+  Future<void> guardarPreferenciasEntrega(PreferenciasEntrega prefs) async {
+    if (token == null) throw Exception('No autenticado');
+    usuario = await _negocio.guardarPreferenciasEntrega(token!, prefs);
+    await _storage.setUsuario(usuario!);
+    notifyListeners();
+  }
+
   Future<CatalogosEspirituales> catalogosEspirituales() async {
     if (token == null) throw Exception('No autenticado');
     return _negocio.catalogosEspirituales(token!);

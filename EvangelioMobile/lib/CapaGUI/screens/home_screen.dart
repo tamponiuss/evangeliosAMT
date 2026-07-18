@@ -145,6 +145,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ListTile(
+              leading: Icon(Icons.mark_email_read_outlined, color: cs.primary),
+              title: const Text('Recibir el evangelio'),
+              subtitle: const Text('Canales y horario de envío'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/delivery-preferences');
+              },
+            ),
+            ListTile(
               title: const Text('Cambiar clave'),
               onTap: () => Navigator.pushNamed(context, '/change-password'),
             ),

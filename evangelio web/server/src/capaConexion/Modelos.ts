@@ -49,6 +49,16 @@ export interface IFiel {
   email: string;
   clave: string;
   idPerfil: string;
+  /** Teléfono para WhatsApp (opcional). */
+  numCelular?: string;
+  /** Canales de entrega del evangelio diario. */
+  porEmail?: boolean;
+  porAPP?: boolean;
+  porWSP?: boolean;
+  porInstagram?: boolean;
+  cuentaInstagram?: string;
+  /** Hora preferida de envío (HH:mm, hora local del usuario). */
+  horaEnvio?: string;
   /** Papa elegido (0 o 1). Solo perfil plus. */
   idPapa?: string;
   /** Congregaciones elegidas (1–3). Solo perfil plus. */
@@ -113,6 +123,13 @@ const fielSchema = new Schema<IFiel>(
     email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
     clave: { type: String, required: true },
     idPerfil: { type: String, required: true },
+    numCelular: { type: String, default: '' },
+    porEmail: { type: Boolean, default: false },
+    porAPP: { type: Boolean, default: true },
+    porWSP: { type: Boolean, default: false },
+    porInstagram: { type: Boolean, default: false },
+    cuentaInstagram: { type: String, default: '' },
+    horaEnvio: { type: String, default: '' },
     idPapa: { type: String, default: '' },
     congregaciones: { type: [String], default: [] },
     idMirada: { type: String, default: '' },

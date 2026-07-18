@@ -101,6 +101,40 @@ authRutas.get('/movil/perfil', autenticarJWTFiel, async (req, res) => {
   res.json(f);
 });
 
+/** Preferencias de entrega del evangelio diario (canales + hora). */
+authRutas.put('/movil/preferencias', autenticarJWTFiel, async (req, res) => {
+  try {
+    const fielReq = req as FielRequest;
+    const email = fielReq.fiel?.email;
+    if (!email) {
+      res.status(401).json({ error: 'Token inválido' });
+      return;
+    }
+    const { porEmail, porAPP, porWSP, porInstagram, numCelular, cuentaInstagram, horaEnvio } = req.body ?? {};
+    if (horaEnvio !== undefined && horaEnvio !== '' && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(horaEnvio))) {
+      res.status(400).json({ error: 'horaEnvio debe tener formato HH:mm (ej. 07:30)' });
+      return;
+    }
+    const f = await FielNegocio.actualizar(email, {
+      porEmail,
+      porAPP,
+      porWSP,
+      porInstagram,
+      numCelular,
+      cuentaInstagram,
+      horaEnvio,
+    });
+    if (!f) {
+      res.status(404).json({ error: 'No encontrado' });
+      return;
+    }
+    res.json(f);
+  } catch (e) {
+    const err = e as Error & { status?: number };
+    res.status(err.status || 400).json({ error: err.message });
+  }
+});
+
 authRutas.put('/movil/cambiar-clave', autenticarJWTFiel, async (req, res) => {
   try {
     const fielReq = req as FielRequest;

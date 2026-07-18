@@ -42,6 +42,11 @@ class AuthNegocio {
     await _api.put('/auth/movil/cambiar-clave', {'claveActual': actual, 'claveNueva': nueva}, token: token);
   }
 
+  Future<UsuarioMovil> guardarPreferenciasEntrega(String token, PreferenciasEntrega prefs) async {
+    final r = await _api.put('/auth/movil/preferencias', prefs.toJson(), token: token);
+    return _usuarioDesdeRespuesta(r);
+  }
+
   Future<CatalogosEspirituales> catalogosEspirituales(String token) async {
     final r = await _api.get('/auth/movil/catalogos-espirituales', token: token);
     return CatalogosEspirituales.fromJson(r);
