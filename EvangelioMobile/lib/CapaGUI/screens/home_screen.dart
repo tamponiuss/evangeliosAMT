@@ -122,6 +122,15 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Evangelio diario'),
               onTap: () => Navigator.pop(context),
             ),
+            ListTile(
+              leading: Icon(Icons.tune_outlined, color: cs.primary),
+              title: const Text('Preferencias'),
+              subtitle: const Text('Canales y horario para recibir el evangelio'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/delivery-preferences');
+              },
+            ),
             if (!esPerfilPlus(widget.auth.usuario?.idPerfil ?? ''))
               ListTile(
                 leading: Icon(Icons.workspace_premium_outlined, color: cs.primary),
@@ -144,15 +153,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (mounted) _buscar();
                 },
               ),
-            ListTile(
-              leading: Icon(Icons.mark_email_read_outlined, color: cs.primary),
-              title: const Text('Recibir el evangelio'),
-              subtitle: const Text('Canales y horario de envío'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/delivery-preferences');
-              },
-            ),
             ListTile(
               title: const Text('Cambiar clave'),
               onTap: () => Navigator.pushNamed(context, '/change-password'),
