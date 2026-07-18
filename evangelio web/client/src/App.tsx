@@ -7,6 +7,7 @@ import { PerfilesPage } from './CapaGUI/pages/PerfilesPage';
 import { UsuariosPage } from './CapaGUI/pages/UsuariosPage';
 import { PaisesPage } from './CapaGUI/pages/PaisesPage';
 import { FielesPage } from './CapaGUI/pages/FielesPage';
+import { EnviosPage } from './CapaGUI/pages/EnviosPage';
 import { PapasPage } from './CapaGUI/pages/PapasPage';
 import { CongregacionesPage } from './CapaGUI/pages/CongregacionesPage';
 import { MiradasEspiritualesPage } from './CapaGUI/pages/MiradasEspiritualesPage';
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/usuarios" element={<UsuariosPage />} />
           <Route path="/paises" element={<PaisesPage />} />
           <Route path="/fieles" element={<FielesPage />} />
+          <Route path="/envios" element={<EnviosPage />} />
           <Route path="/papas" element={<PapasPage />} />
           <Route path="/congregaciones" element={<CongregacionesPage />} />
           <Route path="/miradas-espirituales" element={<MiradasEspiritualesPage />} />

@@ -1,6 +1,17 @@
 import bcrypt from 'bcryptjs';
 import { FielModel, type IFiel } from '../capaConexion/Modelos.js';
 import type { FielCrearDTO, FielRespuestaDTO } from '../CapaDTO/FielDTO.js';
+import { config } from '../config.js';
+
+function normalizarHoraEnvio(valor: string | undefined): string {
+  if (valor === undefined) return '';
+  const h = String(valor).trim();
+  if (!h) return '';
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(h)) {
+    throw new Error('horaEnvio debe tener formato HH:mm (24 horas)');
+  }
+  return h;
+}
 
 function aDTO(d: IFiel): FielRespuestaDTO {
   return {
@@ -90,7 +101,13 @@ export const FielNegocio = {
     if (dto.porWSP !== undefined) set.porWSP = Boolean(dto.porWSP);
     if (dto.porInstagram !== undefined) set.porInstagram = Boolean(dto.porInstagram);
     if (dto.cuentaInstagram !== undefined) set.cuentaInstagram = String(dto.cuentaInstagram).trim();
-    if (dto.horaEnvio !== undefined) set.horaEnvio = String(dto.horaEnvio).trim();
+    if (dto.horaEnvio !== undefined) set.horaEnvio = normalizarHoraEnvio(dto.horaEnvio);
+    // Si activa email sin hora, asignar hora por defecto del servidor.
+    if (set.porEmail === true && (set.horaEnvio === undefined || set.horaEnvio === '')) {
+      const actual = await FielModel.findOne({ email: e }).lean();
+      const horaActual = set.horaEnvio !== undefined ? String(set.horaEnvio) : (actual?.horaEnvio || '');
+      if (!horaActual) set.horaEnvio = config.envioHoraDefault;
+    }
     if (dto.idPapa !== undefined) set.idPapa = dto.idPapa;
     if (dto.congregaciones !== undefined) set.congregaciones = dto.congregaciones;
     if (dto.idMirada !== undefined) set.idMirada = dto.idMirada;

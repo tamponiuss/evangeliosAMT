@@ -1,12 +1,13 @@
 # Despliegue en Render: Dashboard → New → Blueprint → repo evangeliosAMT
+# Un solo servicio: API + panel admin estático + programador de envío por email.
 services:
   - type: web
     name: evangelio-api
     runtime: node
     plan: free
-    rootDir: "evangelio web/server"
-    buildCommand: "npm install && npm run build"
-    startCommand: npm start
+    rootDir: "evangelio web"
+    buildCommand: "npm install && npm run build:deploy"
+    startCommand: "npm start -w server"
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
@@ -19,6 +20,12 @@ services:
         value: gpt-4o-mini
       - key: EVANGELIO_PRECACHE_AL_INICIO
         value: "0"
+      - key: ENVIO_EMAIL_ACTIVO
+        value: "1"
+      - key: TZ_ENVIO
+        value: America/Santiago
+      - key: ENVIO_HORA_DEFAULT
+        value: "07:00"
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET

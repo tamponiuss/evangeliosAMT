@@ -1,11 +1,11 @@
-# Blueprint Render — conectar repo y aplicar, o crear Web Service manual con estos valores.
+# Preferir el render.yaml de la raíz del repo (incluye panel admin + envíos).
 services:
   - type: web
     name: evangelio-api
     runtime: node
-    rootDir: evangelio web/server
-    buildCommand: npm install && npm run build
-    startCommand: npm start
+    rootDir: "evangelio web"
+    buildCommand: "npm install && npm run build:deploy"
+    startCommand: "npm start -w server"
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
@@ -13,24 +13,18 @@ services:
       - key: MONGODB_DB
         value: evangelios
       - key: JWT_EXPIRE
-        value: 8h
+        value: "8h"
       - key: EVANGELIO_PRECACHE_AL_INICIO
         value: "0"
+      - key: ENVIO_EMAIL_ACTIVO
+        value: "1"
+      - key: TZ_ENVIO
+        value: America/Santiago
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: GMAIL_USER
-        sync: false
-      - key: MAIL_FROM
-        sync: false
-      - key: GMAIL_APP_PASSWORD
-        sync: false
       - key: BREVO_API_KEY
-        sync: false
-      - key: RESEND_API_KEY
         sync: false
       - key: OPENAI_API_KEY
         sync: false
-      - key: OPENAI_MODEL
-        value: gpt-4o-mini

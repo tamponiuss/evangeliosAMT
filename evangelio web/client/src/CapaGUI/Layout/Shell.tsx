@@ -4,9 +4,10 @@ import { useAuth } from '../AuthContext';
 const items = [
   { to: '/', label: 'Inicio' },
   { to: '/perfiles', label: 'Perfiles' },
-  { to: '/usuarios', label: 'Usuarios' },
+  { to: '/usuarios', label: 'Usuarios admin' },
   { to: '/paises', label: 'Países' },
-  { to: '/fieles', label: 'Fieles' },
+  { to: '/fieles', label: 'Fieles (app)' },
+  { to: '/envios', label: 'Envíos email' },
   { to: '/papas', label: 'Papas' },
   { to: '/congregaciones', label: 'Congregaciones' },
   { to: '/miradas-espirituales', label: 'Miradas espirituales' },

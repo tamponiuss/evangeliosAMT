@@ -299,6 +299,37 @@ export const RegistroCodigoModel: Model<IRegistroCodigo> =
   (mongoose.models['RegistroCodigo'] as Model<IRegistroCodigo>) ||
   model<IRegistroCodigo>('RegistroCodigo', registroCodigoSchema);
 
+/** Log de envíos diarios del evangelio (evita duplicados por email+fecha+canal). */
+export interface IEnvioEvangelio {
+  email: string;
+  fecha: string;
+  canal: 'email' | 'wsp' | 'instagram';
+  horaProgramada: string;
+  estado: 'enviado' | 'error' | 'omitido';
+  error?: string;
+  titulo?: string;
+  enviadoEn: Date;
+}
+
+const envioEvangelioSchema = new Schema<IEnvioEvangelio>(
+  {
+    email: { type: String, required: true, lowercase: true, trim: true, index: true },
+    fecha: { type: String, required: true, trim: true, index: true },
+    canal: { type: String, required: true, enum: ['email', 'wsp', 'instagram'], default: 'email' },
+    horaProgramada: { type: String, required: true, default: '' },
+    estado: { type: String, required: true, enum: ['enviado', 'error', 'omitido'], default: 'enviado' },
+    error: { type: String, default: '' },
+    titulo: { type: String, default: '' },
+    enviadoEn: { type: Date, default: () => new Date() },
+  },
+  { collection: 'envio_evangelio' }
+);
+envioEvangelioSchema.index({ email: 1, fecha: 1, canal: 1 }, { unique: true });
+
+export const EnvioEvangelioModel: Model<IEnvioEvangelio> =
+  (mongoose.models['EnvioEvangelio'] as Model<IEnvioEvangelio>) ||
+  model<IEnvioEvangelio>('EnvioEvangelio', envioEvangelioSchema);
+
 export async function registrarModelos(): Promise<void> {
   await PerfilModel.createIndexes();
   await UsuarioModel.createIndexes();
@@ -312,4 +343,5 @@ export async function registrarModelos(): Promise<void> {
   await EvangelioDiaModel.createIndexes();
   await ReflexionPersonalizadaModel.createIndexes();
   await RegistroCodigoModel.createIndexes();
+  await EnvioEvangelioModel.createIndexes();
 }

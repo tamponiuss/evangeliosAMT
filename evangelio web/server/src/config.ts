@@ -40,4 +40,17 @@ export const config = {
   evangelioPrecargaReflexiones: process.env.EVANGELIO_PRECACHE_REFLEXIONES !== '0',
   /** Pausa entre llamadas OpenAI durante la precarga (ms). */
   evangelioPrecargaDelayOpenAIMs: Math.max(500, Number(process.env.EVANGELIO_PRECACHE_DELAY_OPENAI_MS) || 2500),
+  /** Envío programado del evangelio por email (solo canal email por ahora). */
+  envioEmailActivo: process.env.ENVIO_EMAIL_ACTIVO !== '0',
+  /** Zona horaria usada para interpretar horaEnvio (IANA). */
+  envioZonaHoraria: (process.env.TZ_ENVIO || process.env.TZ || 'America/Santiago').trim() || 'America/Santiago',
+  /** Intervalo del programador (ms). Mínimo 30s. */
+  envioIntervaloMs: Math.max(30_000, Number(process.env.ENVIO_INTERVALO_MS) || 60_000),
+  /** Hora por defecto si el fiel activa email sin hora (HH:mm). */
+  envioHoraDefault: (() => {
+    const h = (process.env.ENVIO_HORA_DEFAULT || '07:00').trim();
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test(h) ? h : '07:00';
+  })(),
+  /** Pausa entre correos en el mismo tick (ms) para no saturar Brevo. */
+  envioPausaMs: Math.max(0, Number(process.env.ENVIO_PAUSA_MS) || 400),
 };
