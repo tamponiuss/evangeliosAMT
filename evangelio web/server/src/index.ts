@@ -33,6 +33,8 @@ app.get('/api/health', (_req, res) => {
     servicio: 'evangelioweb-api',
     envioEmailActivo: config.envioEmailActivo,
     zonaEnvio: config.envioZonaHoraria,
+    openaiConfigurado: Boolean(config.openaiApiKey?.trim()),
+    openaiModelo: config.openaiModel,
   });
 });
 
@@ -101,6 +103,12 @@ function iniciarPrecargaEvangelioEnSegundoPlano() {
 
 async function main() {
   await conectarMongoDB();
+
+  if (config.openaiApiKey?.trim()) {
+    console.log(`[startup] OpenAI: modelo ${config.openaiModel} configurado.`);
+  } else {
+    console.warn('[startup] Sin OPENAI_API_KEY: las reflexiones usarán textos de respaldo.');
+  }
 
   if (config.brevoApiKey) {
     console.log('[startup] Correo: Brevo API listo.');

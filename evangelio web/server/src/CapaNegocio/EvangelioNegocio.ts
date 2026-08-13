@@ -393,6 +393,19 @@ async function asegurarReflexionPersonalizada(
   return paq;
 }
 
+function isoADateUtc(fechaIso: string): Date {
+  const valor = formatearFechaISO(fechaIso);
+  const [y, m, d] = valor.split('-').map((n) => Number(n));
+  return new Date(Date.UTC(y, m - 1, d));
+}
+
+function dateUtcAIso(d: Date): string {
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dia = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${dia}`;
+}
+
 /** Lista fechas ISO consecutivas desde hoy (inclusive) durante `dias` días. */
 export function fechasDesdeHoy(dias: number): string[] {
   const out: string[] = [];
@@ -405,6 +418,20 @@ export function fechasDesdeHoy(dias: number): string[] {
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const dia = String(d.getDate()).padStart(2, '0');
     out.push(`${y}-${m}-${dia}`);
+  }
+  return out;
+}
+
+/** Lista fechas ISO inclusivas entre `desde` y `hasta` (YYYY-MM-DD o DD-MM-YYYY). */
+export function fechasEntre(desde: string, hasta: string): string[] {
+  const ini = isoADateUtc(desde);
+  const fin = isoADateUtc(hasta);
+  if (fin.getTime() < ini.getTime()) {
+    throw new Error('La fecha final debe ser posterior o igual a la inicial');
+  }
+  const out: string[] = [];
+  for (let t = ini.getTime(); t <= fin.getTime(); t += 24 * 60 * 60 * 1000) {
+    out.push(dateUtcAIso(new Date(t)));
   }
   return out;
 }
@@ -446,14 +473,21 @@ export const EvangelioNegocio = {
   async precargarTextosCalendario(
     diasAnticipados?: number,
     delayMs?: number,
-    opciones?: { incluirReflexionesGenericas?: boolean },
+    opciones?: {
+      incluirReflexionesGenericas?: boolean;
+      desde?: string;
+      hasta?: string;
+    },
   ): Promise<ResultadoPrecargaEvangelio> {
     const dias = diasAnticipados ?? config.evangelioPrecargaDias;
     const pausaDominicos = delayMs ?? config.evangelioPrecargaDelayMs;
     const pausaOpenAI = config.evangelioPrecargaDelayOpenAIMs;
     const incluirReflexiones =
       opciones?.incluirReflexionesGenericas ?? config.evangelioPrecargaReflexiones;
-    const fechas = fechasDesdeHoy(dias);
+    const fechas =
+      opciones?.desde && opciones?.hasta
+        ? fechasEntre(opciones.desde, opciones.hasta)
+        : fechasDesdeHoy(dias);
 
     let textosYaEnCache = 0;
     let textosPrecargados = 0;
@@ -506,7 +540,7 @@ export const EvangelioNegocio = {
     }
 
     return {
-      diasSolicitados: dias,
+      diasSolicitados: fechas.length,
       textosYaEnCache,
       textosPrecargados,
       textosFallidos: fechasTextoFallidas.length,
