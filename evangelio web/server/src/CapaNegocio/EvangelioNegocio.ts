@@ -284,7 +284,7 @@ export function firmaContexto(contexto?: ContextoPersonalizacionDTO | null): str
     .join(',');
   const mirada = contexto.idMiradaElegida || contexto.mirada?.idMirada || '';
   /** v8: reflexiones integradoras sin citas de santos. */
-  return `${papa}|${congregaciones}|${mirada}|v8`;
+  return `${papa}|${congregaciones}|${mirada}|v9`;
 }
 
 /** Texto base del evangelio del día (scraping + cache compartido), sin personalizar. */

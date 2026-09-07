@@ -86,6 +86,29 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'Evangelio del día';
   }
 
+  /// Quita plazos tipo «en las próximas 24/48 horas» de las preguntas.
+  String _sinPlazoDeHoras(String raw) {
+    var t = raw;
+    t = t.replaceAll(
+      RegExp(
+        r'\s*,?\s*en las pr[oó]ximas?\s*\d+\s*(?:[–\-oóy]\s*\d+\s*)?h(?:oras?)?',
+        caseSensitive: false,
+      ),
+      '',
+    );
+    t = t.replaceAll(
+      RegExp(
+        r'\s*,?\s*(?:durante|para)\s+las\s+pr[oó]ximas?\s+\d+\s*(?:[–\-oóy]\s*\d+\s*)?horas?',
+        caseSensitive: false,
+      ),
+      '',
+    );
+    t = t.replaceAll(RegExp(r'\s{2,}'), ' ');
+    t = t.replaceAll(RegExp(r'\s+([,;:!?])'), r'$1');
+    t = t.replaceAll(RegExp(r'\s+\?'), '?');
+    return t.trim();
+  }
+
   Future<void> _buscar() async {
     final token = widget.auth.token;
     if (token == null) return;
@@ -247,7 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (data!.reflexiones.length >= 2) ...[
                       SizedBox(height: ReligiousTheme.espacioEntreSeccionesEvangelio),
                       EvangelioTexto(
-                        'Reflexión 1',
+                        'Meditación',
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,
@@ -261,7 +284,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       EvangelioTexto(
-                        'Reflexión 2',
+                        'Para tu vida',
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,
@@ -302,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: EvangelioTexto(
-                              data!.preguntasReflexion[0],
+                              _sinPlazoDeHoras(data!.preguntasReflexion[0]),
                               alturaLinea: ReligiousTheme.alturaLineaLectura,
                             ),
                           ),
@@ -325,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: EvangelioTexto(
-                              data!.preguntasReflexion[1],
+                              _sinPlazoDeHoras(data!.preguntasReflexion[1]),
                               alturaLinea: ReligiousTheme.alturaLineaLectura,
                             ),
                           ),

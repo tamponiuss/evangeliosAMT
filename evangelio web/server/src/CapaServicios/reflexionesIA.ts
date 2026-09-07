@@ -24,9 +24,21 @@ function normalizarPregunta(s: string): string {
   let t = String(s ?? '')
     .trim()
     .replace(/\s+/g, ' ');
+  t = quitarPlazosDeHoras(t);
   if (!t.startsWith('¿')) t = `¿${t.replace(/^\?+/, '')}`;
   if (!t.endsWith('?')) t = `${t}?`;
   return t;
+}
+
+/** Quita «en las próximas 24/48 horas» y similares, dejando la pregunta concreta. */
+function quitarPlazosDeHoras(s: string): string {
+  return s
+    .replace(/\s*,?\s*en las pr[oó]ximas?\s*\d+\s*(?:[–\-oóy]\s*\d+\s*)?h(?:oras?)?/gi, '')
+    .replace(/\s*,?\s*(?:durante|para)\s+las\s+pr[oó]ximas?\s+\d+\s*(?:[–\-oóy]\s*\d+\s*)?horas?/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([,;:!?])/g, '$1')
+    .replace(/\s+\?/g, '?')
+    .trim();
 }
 
 function normalizarPlano(s: string): string {
@@ -123,6 +135,8 @@ const FRASES_NO_PERMITIDAS = [
   /papa:\s*ninguno/i,
   /\bpapa\s+ninguno\b/i,
   /enfoque del magisterio vivo de la iglesia en general/i,
+  /pr[oó]ximas?\s*\d+\s*(?:[–\-oóy]\s*\d+\s*)?h(?:oras?)?/i,
+  /\ben\s+\d+\s*horas\b/i,
 ];
 
 const PREGUNTAS_DEBILES = [
@@ -140,7 +154,7 @@ const PREGUNTAS_DEBILES = [
 ];
 
 const ANCLAJE_CONCRETO =
-  /hoy|mañana|esta semana|próximas?\s+24|en casa|familia|trabajo|oficina|silencio|perdón|perdonar|conversación|reconcili|vecino|hijo|hija|esposo|esposa|madre|padre|hermano|comunidad|oración|eucarist|confesar|llamar|hablar|dejar|renunciar|pedir|servir|visitar|acompañar/i;
+  /hoy|mañana|esta semana|en casa|familia|trabajo|oficina|silencio|perdón|perdonar|conversación|reconcili|vecino|hijo|hija|esposo|esposa|madre|padre|hermano|comunidad|oración|eucarist|confesar|llamar|hablar|dejar|renunciar|pedir|servir|visitar|acompañar/i;
 
 function pareceReflexionReforzadaLazy(texto: string): boolean {
   return /esta palabra se discierne|integra esta enseñanza|segun la mirada\s*"/i.test(texto);
@@ -207,7 +221,7 @@ function bloqueInstruccionesPreguntas(ctx: ContextoPersonalizacionDTO | null): s
     '- Exactamente DOS preguntas; cada una es UNA sola oración larga (18–45 palabras), que empiece con ¿ y termine en ?.',
     '- Desarrolla cada pregunta con dos o tres matices enlazados (pasaje + escena concreta + consecuencia interior), sin frases telegráficas.',
     '- Pregunta 1 — EXAMEN PROFUNDO: nombra una resistencia, omisión, miedo o dureza que ESTE evangelio desnuda; sitúala en un ámbito real (hogar, trabajo, relación, silencio, comunidad) y añade por qué duele evitarla.',
-    '- Pregunta 2 — COMPROMISO EXIGENTE: pide un acto nombrable en las próximas 24–48 h (hablar, perdonar, callar, servir, confesar, visitar, reparar) ligado a una imagen o verbo del pasaje; indica con quién, cuándo o en qué lugar.',
+    '- Pregunta 2 — COMPROMISO: pide un acto concreto (hablar, perdonar, callar, servir, confesar, visitar, reparar) ligado a una imagen o verbo del pasaje; indica con quién o en qué lugar. No uses plazos en horas (nada de 24 ni 48 horas).',
     '- Prohibido: preguntas genéricas o cortas (“¿qué te dice el evangelio?”, “¿cómo aplicarlo?”, “gesto concreto”, “¿qué aprendes?”).',
     '- Prohibido: nombrar o describir Papa, congregaciones ni mirada espiritual; la personalización es solo de tono, no de catálogo.',
     '- Las dos preguntas deben ser claramente distintas (examen ≠ compromiso) y de similar densidad.',
@@ -286,7 +300,7 @@ function preguntasFallback(titulo: string): [string, string] {
       `¿Qué omisión, orgullo o miedo te revela «${c}» en una relación cercana, y por qué te cuesta admitirlo en oración antes de que termine el día?`,
     ),
     normalizarPregunta(
-      `¿Qué palabra de perdón, de silencio o de servicio concreto ofrecerías en las próximas 24 horas —con quién y en qué lugar— si creyeras que Cristo te interpela desde este pasaje?`,
+      `¿Qué palabra de perdón, de silencio o de servicio concreto ofrecerías —con quién y en qué lugar— si creyeras que Cristo te interpela desde este pasaje?`,
     ),
   ];
 }
@@ -333,7 +347,7 @@ function preguntasFallbackPersonalizadas(titulo: string, _ctx: ContextoPersonali
       `¿Qué verdad incómoda de «${corto}» sigues postergando en una conversación de casa o de trabajo, y qué miedo te impide nombrarla en voz alta hoy?`,
     ),
     normalizarPregunta(
-      `¿A quién servirías, perdonarías o visitarías en las próximas 24 horas si tomaras en serio una imagen concreta de «${corto}», aunque te cueste silencio, humillación o tiempo?`,
+      `¿A quién servirías, perdonarías o visitarías si tomaras en serio una imagen concreta de «${corto}», aunque te cueste silencio, humillación o tiempo?`,
     ),
   ];
 }
@@ -365,11 +379,11 @@ function construirPrompt(
     ? 'Eres un sacerdote católico con experiencia de acompañamiento espiritual y examen de conciencia. ' +
       'Redactas en español claro y pastoral para un fiel Plus. ' +
       'Las reflexiones integran el evangelio del día con el Papa, las congregaciones y la mirada espiritual que el fiel eligió: debes MENCIONARLOS por nombre y tejerlos con el pasaje (sin citar escritos de santos). ' +
-      'Las DOS PREGUNTAS son oraciones largas (18–45 palabras): examen profundo y compromiso exigente en 24–48 h (sin repetir fichas del catálogo). ' +
+      'Las DOS PREGUNTAS son oraciones largas (18–45 palabras): examen profundo y un compromiso concreto, sin plazos de 24 ni 48 horas (sin repetir fichas del catálogo). ' +
       'Nunca menciones “ninguno”, “ninguna mirada espiritual” ni opciones no elegidas. ' +
       'Respondes únicamente con el JSON solicitado.'
     : 'Eres un sacerdote católico. Escribes en español claro y pastoral. ' +
-      'Las preguntas deben ser oraciones largas, incisivas y concretas: examen de conciencia y compromiso en 24–48 h. ' +
+      'Las preguntas deben ser oraciones largas, incisivas y concretas: examen de conciencia y un compromiso, sin plazos de 24 ni 48 horas. ' +
       'Respondes solo con el JSON pedido.';
 
   const lineas = [`Lectura litúrgica: ${titulo}`, '', base, ''];
@@ -394,6 +408,7 @@ function construirPrompt(
   lineas.push(
     'Genera en español:',
     `1) Dos reflexiones pastorales católicas. Cada una: 2 a ${MAX_PARRAFOS_POR_REFLEXION} párrafos separados por línea en blanco.`,
+    '   Reflexión 1 es una Meditación (contemplar el pasaje). Reflexión 2 es Para tu vida (cómo vivirlo en casa, el trabajo o las relaciones).',
     esPlus
       ? '   Integradoras Plus: evangelio + Papa + congregaciones + mirada espiritual, todos mencionados por nombre en las dos reflexiones.'
       : '   Tono cercano, concreto y fiel al pasaje; evita generalidades.',
