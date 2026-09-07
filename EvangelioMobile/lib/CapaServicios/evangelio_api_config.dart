@@ -17,6 +17,10 @@ class EvangelioApiConfig {
   /// API de producción (Render). Se usa en release si no hay [EVANGELIO_API_BASE].
   static const String productionApiBase = 'https://evangelio-api.onrender.com/api';
 
+  /// Arranque de depuración: `register` abre el registro y no restaura la sesión.
+  static const String startOverride =
+      String.fromEnvironment('EVANGELIO_START', defaultValue: '');
+
   /// Tiene prioridad sobre todo lo demás (incluye `/api` al final).
   static const String apiBaseOverride =
       String.fromEnvironment('EVANGELIO_API_BASE', defaultValue: '');

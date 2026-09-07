@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
             caseSensitive: false)
             .hasMatch(norm) ||
         RegExp(r'^salmo(\s|$)', caseSensitive: false).hasMatch(norm);
-    if (!ajeno) return tituloApi.trim();
+    if (!ajeno) return EvangelioTexto.capitalizarLiturgia(tituloApi.trim());
 
     final lower = contenidoTexto.toLowerCase();
     const mar = 'evangelio según';
@@ -79,10 +79,14 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       }
     }
-    if (mejor != null && mejor.length >= 16 && mejor.length < 620) return mejor;
+    if (mejor != null && mejor.length >= 16 && mejor.length < 620) {
+      return EvangelioTexto.capitalizarLiturgia(mejor);
+    }
 
     final colapsado = resto.replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (colapsado.length >= 16 && colapsado.length < 620) return colapsado;
+    if (colapsado.length >= 16 && colapsado.length < 620) {
+      return EvangelioTexto.capitalizarLiturgia(colapsado);
+    }
     return 'Evangelio del día';
   }
 
@@ -117,7 +121,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final r = await _negocio.obtener(token, fechaIso);
       setState(() => data = r);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) {
+        if (widget.auth.cerrarSiErrorDeRed(e)) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -270,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (data!.reflexiones.length >= 2) ...[
                       SizedBox(height: ReligiousTheme.espacioEntreSeccionesEvangelio),
                       EvangelioTexto(
-                        'Meditación',
+                        'Reflexión de meditación',
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,
@@ -284,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       EvangelioTexto(
-                        'Para tu vida',
+                        'Reflexión para tu vida',
                         fontSize: 19,
                         fontWeight: FontWeight.w600,
                         color: cs.onSurface,

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../CapaDTO/types.dart';
 import '../CapaNegocio/auth_negocio.dart';
 import '../CapaServicios/api_service.dart';
+import '../CapaServicios/oauth_servicio.dart';
+import '../CapaServicios/evangelio_api_config.dart';
 import '../capaConexion/storage.dart';
 
 class AuthController extends ChangeNotifier {
@@ -12,8 +16,23 @@ class AuthController extends ChangeNotifier {
   String? token;
   UsuarioMovil? usuario;
   bool cargando = true;
+  /// Aviso breve al volver al inicio (inactividad), no es un error de red.
+  String? avisoSesion;
+
+  static const inactividadMaxima = Duration(minutes: 10);
+
+  DateTime _ultimaActividad = DateTime.now();
+  Timer? _timerInactividad;
 
   Future<void> init() async {
+    if (EvangelioApiConfig.startOverride == 'register' ||
+        EvangelioApiConfig.startOverride == 'welcome') {
+      token = null;
+      usuario = null;
+      cargando = false;
+      notifyListeners();
+      return;
+    }
     token = await _storage.getToken();
     usuario = await _storage.getUsuario();
     if (token != null && token!.isNotEmpty) {
@@ -21,6 +40,7 @@ class AuthController extends ChangeNotifier {
         usuario = await _negocio.perfil(token!);
         await _storage.setUsuario(usuario!);
         cargando = false;
+        _armarTimerInactividad();
         notifyListeners();
         return;
       } catch (_) {
@@ -60,6 +80,11 @@ class AuthController extends ChangeNotifier {
     await _establecerSesion(t, u);
   }
 
+  Future<void> entrarConProveedor(String proveedor, OauthServicio oauth) async {
+    final (t, u) = await oauth.entrarCon(proveedor);
+    await _establecerSesion(t, u);
+  }
+
   Future<bool> solicitarRecuperacionClave(String email) async {
     return _negocio.solicitarRecuperacionClave(email);
   }
@@ -72,9 +97,69 @@ class AuthController extends ChangeNotifier {
   Future<void> _establecerSesion(String t, UsuarioMovil u) async {
     token = t;
     usuario = u;
+    avisoSesion = null;
     await _storage.setToken(t);
     await _storage.setUsuario(u);
+    _armarTimerInactividad();
     notifyListeners();
+  }
+
+  void _armarTimerInactividad() {
+    _timerInactividad?.cancel();
+    if (!autenticado) return;
+    _ultimaActividad = DateTime.now();
+    _timerInactividad = Timer(inactividadMaxima, () {
+      unawaited(cerrarPorInactividad());
+    });
+  }
+
+  /// Reinicia el tiempo de inactividad. Si la app estuvo quieta demasiado, cierra sesión.
+  void registrarActividad() {
+    if (!autenticado) {
+      _timerInactividad?.cancel();
+      return;
+    }
+    if (DateTime.now().difference(_ultimaActividad) >= inactividadMaxima) {
+      unawaited(cerrarPorInactividad());
+      return;
+    }
+    _armarTimerInactividad();
+  }
+
+  /// Al volver de segundo plano: si pasó demasiado tiempo, cierra sin mostrar timeout.
+  void alReanudarApp() {
+    if (!autenticado) return;
+    if (DateTime.now().difference(_ultimaActividad) >= inactividadMaxima) {
+      unawaited(cerrarPorInactividad());
+      return;
+    }
+    _armarTimerInactividad();
+  }
+
+  Future<void> cerrarPorInactividad() async {
+    if (!autenticado) return;
+    await logout(
+      aviso: 'Cerramos la sesión porque la app estuvo un rato inactiva. Vuelve a entrar.',
+    );
+  }
+
+  /// Si el fallo es timeout o desconexión, cierra sesión en silencio (evita el error en pantalla).
+  bool cerrarSiErrorDeRed(Object e) {
+    if (!autenticado) return false;
+    final s = e.toString().toLowerCase();
+    final red = s.contains('timeout') ||
+        s.contains('timed out') ||
+        s.contains('tardó demasiado') ||
+        s.contains('failed to fetch') ||
+        s.contains('sin conexión') ||
+        s.contains('connection refused') ||
+        s.contains('connection reset') ||
+        s.contains('network');
+    if (!red) return false;
+    unawaited(
+      logout(aviso: 'Se perdió la conexión. Vuelve a entrar para continuar.'),
+    );
+    return true;
   }
 
   Future<void> refrescarPerfil() async {
@@ -125,9 +210,12 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> logout() async {
+  Future<void> logout({String? aviso}) async {
+    _timerInactividad?.cancel();
+    _timerInactividad = null;
     token = null;
     usuario = null;
+    avisoSesion = aviso;
     await _storage.clear();
     notifyListeners();
   }

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>TuMirada</title>
+</head>
+<body>
+  <p>Conectando tu cuenta…</p>
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var hash = window.location.hash
+        ? new URLSearchParams(window.location.hash.substring(1))
+        : new URLSearchParams();
+      var payload = JSON.stringify({
+        type: 'tumirada-oauth',
+        code: params.get('code') || hash.get('code') || '',
+        error: params.get('error') || hash.get('error') || '',
+        state: params.get('state') || hash.get('state') || ''
+      });
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage(payload, window.location.origin);
+      }
+      document.body.innerText = (params.get('error') || hash.get('error'))
+        ? 'No se pudo completar. Puedes cerrar esta ventana.'
+        : 'Listo. Puedes cerrar esta ventana.';
+      setTimeout(function () { window.close(); }, 350);
+    })();
+  </script>
+</body>
+</html>

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../auth_controller.dart';
-import '../theme.dart';
+import '../widgets/botones_registro_social.dart';
 import '../widgets/premium_ui.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -60,7 +60,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text('Regístrate para recibir el evangelio diario.'),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
+                CheckboxListTile(
+                  value: acepta,
+                  onChanged: esperandoCodigo ? null : (v) => setState(() => acepta = v ?? false),
+                  title: const Text('Acepto términos y condiciones'),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: esperandoCodigo ? null : () => Navigator.pushNamed(context, '/terms'),
+                    child: const Text('Leer términos (simulados)'),
+                  ),
+                ),
+                if (!esperandoCodigo) ...[
+                  BotonesRegistroSocial(
+                    auth: widget.auth,
+                    habilitado: acepta,
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Text('o con tu correo', style: TextStyle(color: Colors.grey.shade700)),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextField(
                   controller: emailCtrl,
                   decoration: const InputDecoration(labelText: 'Email'),
@@ -79,20 +110,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onPressed: () => setState(() => verClave = !verClave),
                       icon: Icon(verClave ? Icons.visibility_off : Icons.visibility),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                CheckboxListTile(
-                  value: acepta,
-                  onChanged: esperandoCodigo ? null : (v) => setState(() => acepta = v ?? false),
-                  title: const Text('Acepto términos y condiciones'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: esperandoCodigo ? null : () => Navigator.pushNamed(context, '/terms'),
-                    child: const Text('Leer términos (simulados)'),
                   ),
                 ),
               ],
@@ -238,26 +255,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
-          const SizedBox(height: 8),
-          TextButton.icon(
-            onPressed: () {
-              if (Navigator.canPop(context)) {
-                Navigator.pop(context);
-              } else {
-                Navigator.pushReplacementNamed(context, '/login');
-              }
-            },
-            icon: const Icon(Icons.login),
-            label: const Text('Ya tengo cuenta'),
-            style: TextButton.styleFrom(
-              foregroundColor: ReligiousTheme.texto,
-              textStyle: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
         ],
       ),
     );

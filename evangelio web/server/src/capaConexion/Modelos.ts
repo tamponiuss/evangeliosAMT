@@ -71,6 +71,8 @@ export interface IFiel {
   plusPagadoEn?: Date;
   /** Referencia del pago (interna o pasarela). */
   plusReferenciaPago?: string;
+  oauthProveedor?: string;
+  oauthSub?: string;
 }
 
 export interface IPapa {
@@ -136,6 +138,8 @@ const fielSchema = new Schema<IFiel>(
     filtrosConfigurados: { type: Boolean, default: false },
     plusPagadoEn: { type: Date },
     plusReferenciaPago: { type: String, default: '' },
+    oauthProveedor: { type: String, default: '' },
+    oauthSub: { type: String, default: '' },
   },
   { collection: 'fiel' }
 );

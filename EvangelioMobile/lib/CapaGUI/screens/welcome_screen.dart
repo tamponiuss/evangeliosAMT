@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../auth_controller.dart';
 import '../theme.dart';
 import '../../capaConexion/storage.dart';
+import '../widgets/botones_registro_social.dart';
 import '../widgets/premium_ui.dart';
 
 /// Pantalla de arranque: entrar si ya hay cuenta; si no, registrarse o recuperar clave.
@@ -20,6 +21,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _storage = Storage();
   bool loading = false;
   bool verClave = false;
+  bool recordar = false;
   String? errorTexto;
 
   String _msg(Object e) {
@@ -31,13 +33,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    _precargarEmail();
+    _precargarRecordados();
   }
 
-  Future<void> _precargarEmail() async {
+  Future<void> _precargarRecordados() async {
+    final recordarPrev = await _storage.getRecordarCredenciales();
     final cred = await _storage.getCredencialesRecordadas();
     if (!mounted) return;
-    if (cred != null) emailCtrl.text = cred.$1;
+    setState(() {
+      recordar = recordarPrev;
+      if (cred != null) {
+        emailCtrl.text = cred.$1;
+        claveCtrl.text = cred.$2;
+      }
+    });
   }
 
   @override
@@ -60,7 +69,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     });
     try {
       await widget.auth.login(email, clave);
-      await _storage.setCredencialesRecordadas(recordar: true, email: email, clave: clave);
+      await _storage.setCredencialesRecordadas(recordar: recordar, email: email, clave: clave);
     } catch (e) {
       if (mounted) setState(() => errorTexto = _msg(e));
     } finally {
@@ -119,6 +128,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  CheckboxListTile(
+                    value: recordar,
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    onChanged: loading
+                        ? null
+                        : (v) => setState(() => recordar = v ?? false),
+                    title: const Text('Recordarme'),
+                    subtitle: const Text('No volver a escribir correo y clave en este dispositivo'),
+                  ),
+                  if (widget.auth.avisoSesion != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.auth.avisoSesion!,
+                      style: TextStyle(color: Colors.grey.shade800, height: 1.35),
+                    ),
+                  ],
                   if (errorTexto != null) ...[
                     const SizedBox(height: 12),
                     Text(errorTexto!, style: TextStyle(color: Colors.red.shade800, height: 1.35)),
@@ -127,6 +154,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   FilledButton(
                     onPressed: loading ? null : _entrar,
                     child: Text(loading ? 'Entrando…' : 'Entrar'),
+                  ),
+                  const SizedBox(height: 16),
+                  BotonesRegistroSocial(
+                    auth: widget.auth,
+                    habilitado: !loading,
+                    titulo: 'O entra / crea cuenta con',
+                    motivoBloqueo: 'Espera a que termine el inicio de sesión.',
                   ),
                 ],
               ),

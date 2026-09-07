@@ -122,6 +122,17 @@ async function main() {
     );
   }
 
+  const oauth = [
+    config.googleOAuthClientId && config.googleOAuthClientSecret ? 'Gmail' : '',
+    config.microsoftOAuthClientId && config.microsoftOAuthClientSecret ? 'Outlook' : '',
+    config.yahooOAuthClientId && config.yahooOAuthClientSecret ? 'Yahoo' : '',
+  ].filter(Boolean);
+  if (oauth.length) {
+    console.log(`[startup] Registro directo: ${oauth.join(', ')}.`);
+  } else {
+    console.warn('[startup] Sin OAuth (GOOGLE/MICROSOFT/YAHOO_OAUTH_CLIENT_ID y SECRET): los botones Gmail/Outlook/Yahoo no podrán completar el alta.');
+  }
+
   app.listen(config.port, '0.0.0.0', () => {
     console.log(`API SOA n-capas escuchando en puerto ${config.port} (/api)`);
   });

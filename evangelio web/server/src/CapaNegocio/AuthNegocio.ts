@@ -1,11 +1,19 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 import { config } from '../config.js';
 import { PerfilModel, RegistroCodigoModel } from '../capaConexion/Modelos.js';
 import { UsuarioNegocio } from './UsuarioNegocio.js';
 import { FielNegocio } from './FielNegocio.js';
 import type { LoginRequestDTO, LoginResponseDTO } from '../CapaDTO/UsuarioDTO.js';
 import { enviarCodigoRegistro, enviarCodigoRecuperacion } from '../CapaServicios/emailRegistro.js';
+import {
+  esProveedorOauth,
+  identidadDesdeCodigo,
+  identidadDesdeIdTokenGoogle,
+  nombreProveedor,
+  oauthPublico,
+} from '../CapaServicios/oauthProveedores.js';
 
 const payloadAdmin = (p: { idusuario: string; idperfil: string; nomPerfil: string }) => ({
   sub: p.idusuario,
@@ -271,10 +279,67 @@ export const AuthNegocio = {
     }
     const ok = await FielNegocio.verificarClave(clave, fiel.clave);
     if (!ok) {
-      const err: Error & { status?: number } = new Error(
-        'La clave no es correcta para este correo. Comprueba mayúsculas, números y que no haya espacios de más.'
-      );
+      const via = (fiel.oauthProveedor || '').trim();
+      const hint = via
+        ? ` Esta cuenta entra con ${nombreProveedor(via)}. Pulsa «Continuar con ${nombreProveedor(via)}».`
+        : ' Comprueba mayúsculas, números y que no haya espacios de más.';
+      const err: Error & { status?: number } = new Error(`La clave no es correcta para este correo.${hint}`);
       err.status = 401;
+      throw err;
+    }
+    const token = jwt.sign(payloadFiel({ email: fiel.email }), config.jwtSecret, {
+      expiresIn: config.jwtExpireMovil as jwt.SignOptions['expiresIn'],
+    });
+    return { token, usuario: FielNegocio.toPublicDTO(fiel) };
+  },
+
+  oauthConfigPublico() {
+    return oauthPublico();
+  },
+
+  async oauthMovil(params: {
+    proveedor: string;
+    code?: string;
+    redirectUri?: string;
+    codeVerifier?: string;
+    idToken?: string;
+  }) {
+    if (!esProveedorOauth(params.proveedor)) {
+      const err: Error & { status?: number } = new Error('Proveedor no válido.');
+      err.status = 400;
+      throw err;
+    }
+    const idToken = String(params.idToken ?? '').trim();
+    const id =
+      params.proveedor === 'google' && idToken
+        ? await identidadDesdeIdTokenGoogle(idToken)
+        : await identidadDesdeCodigo({
+            proveedor: params.proveedor,
+            code: String(params.code ?? ''),
+            redirectUri: String(params.redirectUri ?? ''),
+            codeVerifier: String(params.codeVerifier ?? ''),
+          });
+    let fiel = await FielNegocio.obtenerConClave(id.email);
+    if (!fiel) {
+      const claveAleatoria = randomBytes(24).toString('hex');
+      await FielNegocio.crear({
+        email: id.email,
+        clave: claveAleatoria,
+        idPerfil: 'perfil-fiel',
+        oauthProveedor: id.proveedor,
+        oauthSub: id.sub,
+      });
+      fiel = await FielNegocio.obtenerConClave(id.email);
+    } else if (!fiel.oauthProveedor) {
+      await FielNegocio.actualizar(id.email, {
+        oauthProveedor: id.proveedor,
+        oauthSub: id.sub,
+      });
+      fiel = await FielNegocio.obtenerConClave(id.email);
+    }
+    if (!fiel) {
+      const err: Error & { status?: number } = new Error('No se pudo crear la cuenta.');
+      err.status = 500;
       throw err;
     }
     const token = jwt.sign(payloadFiel({ email: fiel.email }), config.jwtSecret, {

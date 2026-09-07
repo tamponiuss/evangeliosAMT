@@ -2,6 +2,8 @@ export interface FielCrearDTO {
   email: string;
   clave: string;
   idPerfil: string;
+  oauthProveedor?: string;
+  oauthSub?: string;
 }
 
 export interface FielRespuestaDTO {

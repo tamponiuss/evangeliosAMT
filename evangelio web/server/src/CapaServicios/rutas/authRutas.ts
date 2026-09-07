@@ -71,6 +71,31 @@ authRutas.post('/movil/registro/completar', async (req, res) => {
   }
 });
 
+authRutas.get('/movil/oauth/config', (_req, res) => {
+  res.json(AuthNegocio.oauthConfigPublico());
+});
+
+authRutas.post('/movil/oauth', async (req, res) => {
+  try {
+    const { proveedor, code, redirectUri, codeVerifier, idToken } = req.body ?? {};
+    if (!proveedor || (!idToken && (!code || !redirectUri || !codeVerifier))) {
+      res.status(400).json({ error: 'proveedor y (idToken o code/redirectUri/codeVerifier) son requeridos' });
+      return;
+    }
+    const r = await AuthNegocio.oauthMovil({
+      proveedor: String(proveedor),
+      code: code != null ? String(code) : undefined,
+      redirectUri: redirectUri != null ? String(redirectUri) : undefined,
+      codeVerifier: codeVerifier != null ? String(codeVerifier) : undefined,
+      idToken: idToken != null ? String(idToken) : undefined,
+    });
+    res.json(r);
+  } catch (e) {
+    const err = e as Error & { status?: number };
+    res.status(err.status || 500).json({ error: err.message || 'Error al entrar con la cuenta' });
+  }
+});
+
 authRutas.post('/movil/login', async (req, res) => {
   try {
     const { email, clave } = req.body;

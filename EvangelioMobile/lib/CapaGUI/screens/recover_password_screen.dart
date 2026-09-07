@@ -16,16 +16,31 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
   final emailCtrl = TextEditingController();
   final codigoCtrl = TextEditingController();
   final claveCtrl = TextEditingController();
-  bool loading = false;
+  bool enviando = false;
+  bool guardando = false;
   bool esperandoCodigo = false;
   bool verClave = false;
   String? errorTexto;
   String? infoTexto;
 
+  bool get ocupado => enviando || guardando;
+
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
 
   @override
+  void initState() {
+    super.initState();
+    widget.auth.addListener(_siYaEntroCerrar);
+  }
+
+  void _siYaEntroCerrar() {
+    if (!mounted || !widget.auth.autenticado) return;
+    Navigator.of(context).popUntil((r) => r.isFirst);
+  }
+
+  @override
   void dispose() {
+    widget.auth.removeListener(_siYaEntroCerrar);
     emailCtrl.dispose();
     codigoCtrl.dispose();
     claveCtrl.dispose();
@@ -39,7 +54,7 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
       return;
     }
     setState(() {
-      loading = true;
+      enviando = true;
       errorTexto = null;
       infoTexto = null;
     });
@@ -54,11 +69,12 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
     } catch (e) {
       if (mounted) setState(() => errorTexto = _msg(e));
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) setState(() => enviando = false);
     }
   }
 
   Future<void> _guardarClave() async {
+    FocusScope.of(context).unfocus();
     final email = emailCtrl.text.trim().toLowerCase();
     final codigo = codigoCtrl.text.trim();
     final clave = claveCtrl.text;
@@ -71,15 +87,21 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
       return;
     }
     setState(() {
-      loading = true;
+      guardando = true;
       errorTexto = null;
     });
     try {
       await widget.auth.completarRecuperacionClave(email, codigo, clave);
+      if (mounted) {
+        Navigator.of(context).popUntil((r) => r.isFirst);
+      }
     } catch (e) {
-      if (mounted) setState(() => errorTexto = _msg(e));
+      if (mounted) {
+        setState(() => errorTexto = _msg(e));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_msg(e))));
+      }
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) setState(() => guardando = false);
     }
   }
 
@@ -104,8 +126,8 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
           if (!esperandoCodigo) ...[
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: loading ? null : _enviarCodigo,
-              child: Text(loading ? 'Enviando…' : 'Enviar código'),
+              onPressed: ocupado ? null : _enviarCodigo,
+              child: Text(enviando ? 'Enviando…' : 'Enviar código'),
             ),
           ] else ...[
             const SizedBox(height: 16),
@@ -134,13 +156,18 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 10),
+            if (errorTexto != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(errorTexto!, style: TextStyle(color: Colors.red.shade800, height: 1.35, fontSize: 16)),
+              ),
             FilledButton(
-              onPressed: loading ? null : _guardarClave,
-              child: Text(loading ? 'Guardando…' : 'Guardar y entrar'),
+              onPressed: ocupado ? null : _guardarClave,
+              child: Text(guardando ? 'Guardando…' : 'Guardar y entrar'),
             ),
             TextButton(
-              onPressed: loading
+              onPressed: ocupado
                   ? null
                   : () {
                       setState(() {
@@ -154,17 +181,13 @@ class _RecoverPasswordScreenState extends State<RecoverPasswordScreen> {
               child: const Text('Usar otro correo'),
             ),
             TextButton(
-              onPressed: loading ? null : _enviarCodigo,
-              child: const Text('Reenviar código'),
+              onPressed: ocupado ? null : _enviarCodigo,
+              child: Text(enviando ? 'Enviando…' : 'Reenviar código'),
             ),
           ],
           if (infoTexto != null) ...[
             const SizedBox(height: 12),
             Text(infoTexto!, style: TextStyle(color: Colors.green.shade800, height: 1.35)),
-          ],
-          if (errorTexto != null) ...[
-            const SizedBox(height: 12),
-            Text(errorTexto!, style: TextStyle(color: Colors.red.shade800, height: 1.35)),
           ],
         ],
       ),

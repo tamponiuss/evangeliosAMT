@@ -47,15 +47,17 @@ class EvangelioTexto extends StatelessWidget {
     );
   }
 
-  /// Normaliza saltos y separa bloques antes de encabezados litúrgicos o versículos.
+  /// Normaliza saltos y separa bloques solo en punto aparte (fin de oración).
   static String prepararParaLectura(String s) {
     var t = s.replaceAll('\r\n', '\n').trim();
     if (t.isEmpty) return t;
 
     t = t.replaceAll(RegExp(r'[ \t]+\n'), '\n');
     t = t.replaceAll(RegExp(r'\n[ \t]+'), '\n');
-    // Une silabeo de fin de línea: "pala-\nbra" → "palabra".
     t = t.replaceAll(RegExp(r'(\p{L})-\n(\p{L})', unicode: true), r'$1$2');
+    // Un salto simple en medio de frase no es párrafo: pasa a espacio.
+    // No capturar '\n' (si no, un punto aparte '\n\n' se vuelve un solo salto).
+    t = t.replaceAllMapped(RegExp(r'([^.!?…»"”\n])\n(?!\n)'), (m) => '${m[1]} ');
 
     final marcas = <(RegExp, String)>[
       (RegExp(r'\n(Evangelio según)', caseSensitive: false), '\n\nEvangelio según'),
@@ -66,16 +68,59 @@ class EvangelioTexto extends StatelessWidget {
       t = t.replaceAll(par.$1, par.$2);
     }
 
-    return t.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+    t = t.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+    return capitalizarLiturgia(t);
+  }
+
+  /// «Evangelio» con E mayúscula; «San Lucas» / «Santa María» con S mayúscula.
+  static String capitalizarLiturgia(String s) {
+    var t = s.replaceAllMapped(
+      RegExp(r'(^|[^\p{L}])evangelio\b', caseSensitive: false, unicode: true),
+      (m) => '${m[1]}Evangelio',
+    );
+    t = t.replaceAllMapped(
+      RegExp(r'(^|[^\p{L}])san(ta)?\s+(\p{L})', caseSensitive: false, unicode: true),
+      (m) {
+        final prefijo = m[1] ?? '';
+        final santa = (m[2] ?? '').isNotEmpty;
+        final letra = (m[3] ?? '').toUpperCase();
+        return '$prefijo${santa ? 'Santa' : 'San'} $letra';
+      },
+    );
+    return t;
+  }
+
+  static bool _sigueFrase(String s) {
+    return RegExp(r'^[«""]?\s*[a-záéíóúüñ]').hasMatch(s.trim());
+  }
+
+  static bool _citaSinCerrar(String s) {
+    return RegExp(r'«[^»]*$').hasMatch(s.trim());
   }
 
   List<String> _bloques(String s) {
-    final preparado = modoLecturaEvangelio ? prepararParaLectura(s) : s.trim();
-    return preparado
+    final preparado = modoLecturaEvangelio ? prepararParaLectura(s) : capitalizarLiturgia(s.trim());
+    final crudos = preparado
         .split(RegExp(r'\n\s*\n+'))
         .map((e) => e.trim().replaceAll(RegExp(r'\n+'), ' '))
         .where((e) => e.isNotEmpty)
         .toList();
+
+    final unidos = <String>[];
+    for (final b in crudos) {
+      if (unidos.isEmpty) {
+        unidos.add(b);
+        continue;
+      }
+      final prev = unidos.last;
+      // Hueco solo en punto aparte. «Levántate» / «y ponte en medio» va junto.
+      if (_sigueFrase(b) || _citaSinCerrar(prev)) {
+        unidos[unidos.length - 1] = '${prev.trim()} ${b.trim()}';
+      } else {
+        unidos.add(b);
+      }
+    }
+    return unidos;
   }
 
   @override
@@ -96,7 +141,9 @@ class EvangelioTexto extends StatelessWidget {
     }
 
     if (!separarParrafos || texto.trim().isEmpty) {
-      return linea(modoLecturaEvangelio ? prepararParaLectura(texto) : texto);
+      return linea(
+        modoLecturaEvangelio ? prepararParaLectura(texto) : capitalizarLiturgia(texto),
+      );
     }
 
     final partes = _bloques(texto);

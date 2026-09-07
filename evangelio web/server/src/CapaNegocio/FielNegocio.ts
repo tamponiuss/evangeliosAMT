@@ -68,6 +68,8 @@ export const FielNegocio = {
       congregaciones: [],
       idMirada: '',
       filtrosConfigurados: false,
+      oauthProveedor: dto.oauthProveedor || '',
+      oauthSub: dto.oauthSub || '',
     });
     return aDTO(doc.toObject() as IFiel);
   },
@@ -90,6 +92,8 @@ export const FielNegocio = {
       filtrosConfigurados?: boolean;
       plusPagadoEn?: Date;
       plusReferenciaPago?: string;
+      oauthProveedor?: string;
+      oauthSub?: string;
     }
   ): Promise<FielRespuestaDTO | null> {
     const e = email.toLowerCase();
@@ -114,6 +118,8 @@ export const FielNegocio = {
     if (dto.filtrosConfigurados !== undefined) set.filtrosConfigurados = Boolean(dto.filtrosConfigurados);
     if (dto.plusPagadoEn !== undefined) set.plusPagadoEn = dto.plusPagadoEn;
     if (dto.plusReferenciaPago !== undefined) set.plusReferenciaPago = dto.plusReferenciaPago;
+    if (dto.oauthProveedor !== undefined) set.oauthProveedor = String(dto.oauthProveedor);
+    if (dto.oauthSub !== undefined) set.oauthSub = String(dto.oauthSub);
     if (dto.nuevoEmail) {
       set.email = String(dto.nuevoEmail).toLowerCase().trim();
     }

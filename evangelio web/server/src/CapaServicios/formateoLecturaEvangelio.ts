@@ -35,7 +35,7 @@ export function sanitizarTituloEvangelioParaApp(tituloRaw: string, contenido: st
   const esTituloLecturaAjena =
     /^((primera|segunda)\s+lectura)$/i.test(norm) || /^salmo(\s|$)/i.test(norm);
 
-  if (!esTituloLecturaAjena) return t;
+  if (!esTituloLecturaAjena) return capitalizarLiturgia(t);
 
   const mi = contenido.search(/\bEvangelio según\b/i);
   if (mi >= 0) {
@@ -46,7 +46,7 @@ export function sanitizarTituloEvangelioParaApp(tituloRaw: string, contenido: st
       (conSegun && conSegun.length >= 16 ? conSegun : null) ??
       resto.replace(/\s+/g, ' ').trim().slice(0, 520);
     const fin = linea.length;
-    if (fin >= 16 && fin < 620) return linea;
+    if (fin >= 16 && fin < 620) return capitalizarLiturgia(linea);
   }
 
   return 'Evangelio del día';
@@ -134,6 +134,39 @@ function saltosTrasReferencias(t: string): string {
     .replace(/\n{3,}/g, '\n\n');
 }
 
+/** Une bloques que no son punto aparte (evita «Levántate» / «y ponte en medio»). */
+function unirCortesAMediaFrase(t: string): string {
+  const bloques = t
+    .split(/\n\s*\n/)
+    .map((b) => b.trim())
+    .filter(Boolean);
+  const out: string[] = [];
+  for (const b of bloques) {
+    if (out.length === 0) {
+      out.push(b);
+      continue;
+    }
+    const prev = out[out.length - 1]!;
+    const sigueMinuscula = /^[«""]?\s*[a-záéíóúüñ]/.test(b);
+    const citaAbierta = /«[^»]*$/.test(prev);
+    if (sigueMinuscula || citaAbierta) {
+      out[out.length - 1] = `${prev} ${b}`;
+    } else {
+      out.push(b);
+    }
+  }
+  return out.join('\n\n');
+}
+
+function capitalizarLiturgia(t: string): string {
+  let s = t.replace(/(^|[^\p{L}])evangelio\b/giu, '$1Evangelio');
+  s = s.replace(/(^|[^\p{L}])san(ta)?\s+(\p{L})/giu, (_m, p: string, ta: string | undefined, letra: string) => {
+    const san = ta ? 'Santa' : 'San';
+    return `${p}${san} ${letra.toUpperCase()}`;
+  });
+  return s;
+}
+
 function partirParrafoLargo(parrafo: string, maxLen: number): string[] {
   const p = parrafo.trim();
   if (p.length <= maxLen) return [p];
@@ -142,30 +175,18 @@ function partirParrafoLargo(parrafo: string, maxLen: number): string[] {
   const minCorte = Math.floor(maxLen * 0.42);
   while (rest.length > maxLen) {
     let corte = -1;
-    const limBusqueda = Math.min(rest.length, maxLen + 60);
+    const limBusqueda = Math.min(rest.length, maxLen + 80);
     const busca = rest.slice(0, limBusqueda);
-    for (const sep of ['. ', '; ', ': ', ', '] as const) {
-      let from = limBusqueda;
-      while (from > minCorte) {
-        const i = busca.lastIndexOf(sep, from - 1);
-        if (i < minCorte) break;
-        const candidato = i + sep.length;
-        if (candidato <= limBusqueda && i >= minCorte) {
-          corte = candidato;
-          break;
-        }
-        from = i;
+    for (const sep of ['. ', '? ', '! '] as const) {
+      const i = busca.lastIndexOf(sep);
+      if (i >= minCorte) {
+        corte = i + sep.length;
+        break;
       }
-      if (corte > 0) break;
     }
     if (corte < minCorte) {
-      const ultimoEspacio = busca.lastIndexOf(' ', maxLen);
-      corte = ultimoEspacio >= minCorte ? ultimoEspacio + 1 : maxLen;
-    }
-    // Nunca partir a mitad de palabra si hay un espacio anterior.
-    if (corte < rest.length && !/\s/.test(rest[corte] ?? '') && !/\s/.test(rest[corte - 1] ?? '')) {
-      const espacioAntes = rest.lastIndexOf(' ', corte);
-      if (espacioAntes >= minCorte) corte = espacioAntes + 1;
+      // No partir a mitad de frase: dejar el párrafo entero.
+      break;
     }
     const trozo = rest.slice(0, corte).trim();
     if (trozo) out.push(trozo);
@@ -189,11 +210,15 @@ export function formatearContenidoParaLectura(texto: string): string {
   if (!texto?.trim()) return '';
   let t = contenidoSoloEvangelio(texto);
   t = normalizarNuevasLineas(t);
+  t = t.replace(/([^.!?…»"\n])\n(?!\n)/g, '$1 ');
   t = insertarSaltosLiturgicos(t);
   t = saltosTrasReferencias(t);
   t = partirParrafosMuyLargos(t, 340);
+  t = unirCortesAMediaFrase(t);
+  t = t.replace(/([^\n])\n(?!\n)/g, '$1 ');
+  t = capitalizarLiturgia(t);
   t = quitarColaDesdeMarcadorPrimeraLectura(t);
-  return normalizarNuevasLineas(t).replace(/\n{3,}/g, '\n\n');
+  return capitalizarLiturgia(normalizarNuevasLineas(t).replace(/\n{3,}/g, '\n\n'));
 }
 
 /**

@@ -408,7 +408,7 @@ function construirPrompt(
   lineas.push(
     'Genera en español:',
     `1) Dos reflexiones pastorales católicas. Cada una: 2 a ${MAX_PARRAFOS_POR_REFLEXION} párrafos separados por línea en blanco.`,
-    '   Reflexión 1 es una Meditación (contemplar el pasaje). Reflexión 2 es Para tu vida (cómo vivirlo en casa, el trabajo o las relaciones).',
+    '   Reflexión 1 es una Reflexión de meditación (contemplar el pasaje). Reflexión 2 es una Reflexión para tu vida (cómo vivirlo en casa, el trabajo o las relaciones).',
     esPlus
       ? '   Integradoras Plus: evangelio + Papa + congregaciones + mirada espiritual, todos mencionados por nombre en las dos reflexiones.'
       : '   Tono cercano, concreto y fiel al pasaje; evita generalidades.',

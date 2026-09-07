@@ -18,6 +18,13 @@ export const config = {
   jwtExpire: process.env.JWT_EXPIRE || '8h',
   /** Sesión de la app móvil (días). Quien ya entró vuelve al evangelio sin login. */
   jwtExpireMovil: process.env.JWT_EXPIRE_MOVIL || '30d',
+  /** OAuth público (client id). El secreto nunca se envía a la app. */
+  googleOAuthClientId: (process.env.GOOGLE_OAUTH_CLIENT_ID ?? '').trim(),
+  googleOAuthClientSecret: (process.env.GOOGLE_OAUTH_CLIENT_SECRET ?? '').trim(),
+  microsoftOAuthClientId: (process.env.MICROSOFT_OAUTH_CLIENT_ID ?? '').trim(),
+  microsoftOAuthClientSecret: (process.env.MICROSOFT_OAUTH_CLIENT_SECRET ?? '').trim(),
+  yahooOAuthClientId: (process.env.YAHOO_OAUTH_CLIENT_ID ?? '').trim(),
+  yahooOAuthClientSecret: (process.env.YAHOO_OAUTH_CLIENT_SECRET ?? '').trim(),
   /** Correo de salida (remitente) para códigos de registro. */
   mailFrom: process.env.MAIL_FROM || 'tamponievangelio@gmail.com',
   /** Usuario SMTP (Gmail): suele ser el mismo correo. */
