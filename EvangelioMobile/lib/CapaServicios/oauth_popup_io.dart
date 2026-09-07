@@ -1,12 +1,18 @@
 import 'dart:async';
 
-import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+const _oauthLinks = EventChannel('tumirada/oauth_links');
 
 Future<Map<String, String>?> abrirOauthPopup(String url) async {
   final completer = Completer<Map<String, String>?>();
-  final sub = AppLinks().uriLinkStream.listen((uri) {
-    if (uri.scheme != 'com.tamponi.evangelio' || uri.host != 'oauth') return;
+  final sub = _oauthLinks.receiveBroadcastStream().listen((event) {
+    final raw = event?.toString() ?? '';
+    final uri = Uri.tryParse(raw);
+    if (uri == null || uri.scheme != 'com.tamponi.evangelio' || uri.host != 'oauth') {
+      return;
+    }
     if (completer.isCompleted) return;
     completer.complete({
       'code': uri.queryParameters['code'] ?? '',

@@ -24,3 +24,17 @@ plugins {
 }
 
 include(":app")
+
+// Los plugins piden AGP distintas; este JDK no puede bajarlas por SSL.
+// Forzamos la 8.11.1 que ya está en caché del proyecto.
+gradle.beforeProject {
+    val classpathCfg = buildscript.configurations.findByName("classpath") ?: return@beforeProject
+    classpathCfg.resolutionStrategy.eachDependency {
+        if (requested.group == "com.android.tools.build" && requested.name == "gradle") {
+            useVersion("8.11.1")
+        }
+        if (requested.group == "org.jetbrains.kotlin" && requested.name == "kotlin-gradle-plugin") {
+            useVersion("2.2.20")
+        }
+    }
+}
