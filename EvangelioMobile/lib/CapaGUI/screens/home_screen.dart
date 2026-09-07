@@ -219,17 +219,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+                    DecoratedBox(
                       decoration: BoxDecoration(
                         color: cs.surfaceContainerLowest.withValues(alpha: 0.65),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: EvangelioTexto(
-                        contenidoTarjeta,
-                        modoLecturaEvangelio: true,
-                        fontSize: ReligiousTheme.tamanoFuenteContenidoEvangelio,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 18, 18, 18),
+                        child: EvangelioTexto(
+                          contenidoTarjeta,
+                          modoLecturaEvangelio: true,
+                          fontSize: ReligiousTheme.tamanoFuenteContenidoEvangelio,
+                        ),
                       ),
                     ),
                     SizedBox(height: ReligiousTheme.espacioEntreSeccionesEvangelio),

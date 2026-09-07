@@ -10,7 +10,7 @@ class EvangelioTexto extends StatelessWidget {
   final FontWeight? fontWeight;
   final Color? color;
   final bool separarParrafos;
-  /// Modo lectura del cuerpo del evangelio (más aire y justificado).
+  /// Modo lectura del cuerpo del evangelio (más aire, sin cortar palabras).
   final bool modoLecturaEvangelio;
   final double? alturaLinea;
   final double? letterSpacing;
@@ -54,6 +54,8 @@ class EvangelioTexto extends StatelessWidget {
 
     t = t.replaceAll(RegExp(r'[ \t]+\n'), '\n');
     t = t.replaceAll(RegExp(r'\n[ \t]+'), '\n');
+    // Une silabeo de fin de línea: "pala-\nbra" → "palabra".
+    t = t.replaceAll(RegExp(r'(\p{L})-\n(\p{L})', unicode: true), r'$1$2');
 
     final marcas = <(RegExp, String)>[
       (RegExp(r'\n(Evangelio según)', caseSensitive: false), '\n\nEvangelio según'),
@@ -80,14 +82,21 @@ class EvangelioTexto extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final estilo = _estilo(theme.textTheme, theme);
-    final alinear = modoLecturaEvangelio ? TextAlign.justify : TextAlign.start;
+    // start (no justify): en móvil el justificado recorta letras al borde derecho.
+    const alinear = TextAlign.start;
 
-    if (!separarParrafos || texto.trim().isEmpty) {
+    Widget linea(String valor) {
       return Text(
-        modoLecturaEvangelio ? prepararParaLectura(texto) : texto,
+        valor,
         style: estilo,
         textAlign: alinear,
+        softWrap: true,
+        overflow: TextOverflow.visible,
       );
+    }
+
+    if (!separarParrafos || texto.trim().isEmpty) {
+      return linea(modoLecturaEvangelio ? prepararParaLectura(texto) : texto);
     }
 
     final partes = _bloques(texto);
@@ -95,7 +104,7 @@ class EvangelioTexto extends StatelessWidget {
       return const SizedBox.shrink();
     }
     if (partes.length == 1) {
-      return Text(partes.first, style: estilo, textAlign: alinear);
+      return linea(partes.first);
     }
 
     final sep = espacioEntreParrafos ??
@@ -108,7 +117,7 @@ class EvangelioTexto extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < partes.length; i++) ...[
-          Text(partes[i], style: estilo, textAlign: alinear),
+          linea(partes[i]),
           if (i < partes.length - 1) SizedBox(height: sep),
         ],
       ],

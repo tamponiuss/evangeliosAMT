@@ -144,7 +144,7 @@ function partirParrafoLargo(parrafo: string, maxLen: number): string[] {
     let corte = -1;
     const limBusqueda = Math.min(rest.length, maxLen + 60);
     const busca = rest.slice(0, limBusqueda);
-    for (const sep of ['. ', '; ', ': '] as const) {
+    for (const sep of ['. ', '; ', ': ', ', '] as const) {
       let from = limBusqueda;
       while (from > minCorte) {
         const i = busca.lastIndexOf(sep, from - 1);
@@ -158,7 +158,15 @@ function partirParrafoLargo(parrafo: string, maxLen: number): string[] {
       }
       if (corte > 0) break;
     }
-    if (corte < minCorte) corte = maxLen;
+    if (corte < minCorte) {
+      const ultimoEspacio = busca.lastIndexOf(' ', maxLen);
+      corte = ultimoEspacio >= minCorte ? ultimoEspacio + 1 : maxLen;
+    }
+    // Nunca partir a mitad de palabra si hay un espacio anterior.
+    if (corte < rest.length && !/\s/.test(rest[corte] ?? '') && !/\s/.test(rest[corte - 1] ?? '')) {
+      const espacioAntes = rest.lastIndexOf(' ', corte);
+      if (espacioAntes >= minCorte) corte = espacioAntes + 1;
+    }
     const trozo = rest.slice(0, corte).trim();
     if (trozo) out.push(trozo);
     rest = rest.slice(corte).trim();
