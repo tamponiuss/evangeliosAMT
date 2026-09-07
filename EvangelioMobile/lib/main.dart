@@ -4,10 +4,11 @@ import 'CapaGUI/auth_controller.dart';
 import 'CapaGUI/screens/change_password_screen.dart';
 import 'CapaGUI/screens/delivery_preferences_screen.dart';
 import 'CapaGUI/screens/home_screen.dart';
-import 'CapaGUI/screens/login_screen.dart';
+import 'CapaGUI/screens/welcome_screen.dart';
+import 'CapaGUI/screens/recover_password_screen.dart';
+import 'CapaGUI/screens/register_screen.dart';
 import 'CapaGUI/screens/plus_upgrade_screen.dart';
 import 'CapaGUI/screens/spiritual_filters_screen.dart';
-import 'CapaGUI/screens/register_screen.dart';
 import 'CapaGUI/screens/terms_screen.dart';
 import 'CapaGUI/theme.dart';
 
@@ -38,7 +39,7 @@ class _EvangelioMobileAppState extends State<EvangelioMobileApp> {
     if (auth.cargando) {
       home = const Scaffold(body: Center(child: CircularProgressIndicator()));
     } else if (!auth.autenticado) {
-      home = RegisterScreen(auth: auth);
+      home = WelcomeScreen(auth: auth);
     } else if (auth.requiereFiltrosEspirituales) {
       home = SpiritualFiltersScreen(auth: auth, bloquearAtras: true);
     } else {
@@ -52,7 +53,8 @@ class _EvangelioMobileAppState extends State<EvangelioMobileApp> {
       home: home,
       routes: {
         '/register': (_) => RegisterScreen(auth: auth),
-        '/login': (_) => LoginScreen(auth: auth),
+        '/login': (_) => WelcomeScreen(auth: auth),
+        '/recover-password': (_) => RecoverPasswordScreen(auth: auth),
         '/terms': (_) => const TermsScreen(),
         '/home': (_) => HomeScreen(auth: auth),
         '/spiritual-filters': (_) => SpiritualFiltersScreen(auth: auth),

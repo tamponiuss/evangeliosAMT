@@ -16,6 +16,8 @@ services:
         value: evangelios
       - key: JWT_EXPIRE
         value: "8h"
+      - key: JWT_EXPIRE_MOVIL
+        value: "30d"
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: EVANGELIO_PRECACHE_AL_INICIO

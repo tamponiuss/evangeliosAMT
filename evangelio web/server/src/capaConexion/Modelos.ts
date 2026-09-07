@@ -279,11 +279,12 @@ export const ReflexionPersonalizadaModel: Model<IReflexionPersonalizada> =
   (mongoose.models['ReflexionPersonalizada'] as Model<IReflexionPersonalizada>) ||
   model<IReflexionPersonalizada>('ReflexionPersonalizada', reflexionPersonalizadaSchema);
 
-/** Código de verificación de registro móvil (un documento por email pendiente). */
+/** Código de verificación de registro o recuperación de clave (un documento por email). */
 export interface IRegistroCodigo {
   email: string;
   codigoHash: string;
   expira: Date;
+  tipo?: 'registro' | 'recuperacion';
 }
 
 const registroCodigoSchema = new Schema<IRegistroCodigo>(
@@ -291,6 +292,7 @@ const registroCodigoSchema = new Schema<IRegistroCodigo>(
     email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
     codigoHash: { type: String, required: true },
     expira: { type: Date, required: true, index: true },
+    tipo: { type: String, enum: ['registro', 'recuperacion'], default: 'registro' },
   },
   { collection: 'registro_codigo' }
 );

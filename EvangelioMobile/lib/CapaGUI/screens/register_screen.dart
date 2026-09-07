@@ -27,19 +27,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   String _msg(Object e) => e.toString().replaceFirst('Exception: ', '');
 
-  IconData _iconoProveedor(String proveedor) {
-    switch (proveedor) {
-      case 'Google':
-        return Icons.g_mobiledata;
-      case 'Outlook':
-        return Icons.mail_outline;
-      case 'Apple':
-        return Icons.apple;
-      default:
-        return Icons.login;
-    }
-  }
-
   void _reiniciarFlujoCodigo() {
     setState(() {
       esperandoCodigo = false;
@@ -251,26 +238,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
-          const SizedBox(height: 18),
-          const PremiumSectionTitle(text: 'o continuar con', icon: Icons.hub_outlined),
-          const SizedBox(height: 8),
-          for (final s in const ['Google', 'Outlook', 'Apple'])
-            OutlinedButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Ingreso con $s (simulado en esta versión)')),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(_iconoProveedor(s), size: 20),
-                  const SizedBox(width: 8),
-                  Text(s),
-                ],
-              ),
-            ),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/login'),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
             icon: const Icon(Icons.login),
             label: const Text('Ya tengo cuenta'),
             style: TextButton.styleFrom(

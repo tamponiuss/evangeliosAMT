@@ -86,6 +86,40 @@ authRutas.post('/movil/login', async (req, res) => {
   }
 });
 
+authRutas.post('/movil/recuperar/solicitar-codigo', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ error: 'email es requerido' });
+      return;
+    }
+    const r = await AuthNegocio.solicitarRecuperacionClaveMovil(String(email));
+    res.json(r);
+  } catch (e) {
+    const err = e as Error & { status?: number };
+    res.status(err.status ?? 500).json({ error: err.message || 'Error al enviar código' });
+  }
+});
+
+authRutas.post('/movil/recuperar/completar', async (req, res) => {
+  try {
+    const { email, codigo, claveNueva } = req.body;
+    if (!email || codigo === undefined || codigo === null || !claveNueva) {
+      res.status(400).json({ error: 'email, codigo y claveNueva son requeridos' });
+      return;
+    }
+    const r = await AuthNegocio.completarRecuperacionClaveMovil(
+      String(email),
+      String(codigo),
+      String(claveNueva)
+    );
+    res.json(r);
+  } catch (e) {
+    const err = e as Error & { status?: number };
+    res.status(err.status || 500).json({ error: err.message || 'Error al cambiar la clave' });
+  }
+});
+
 authRutas.get('/movil/perfil', autenticarJWTFiel, async (req, res) => {
   const fielReq = req as FielRequest;
   const email = fielReq.fiel?.email;

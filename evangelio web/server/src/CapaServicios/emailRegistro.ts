@@ -34,3 +34,34 @@ export async function enviarCodigoRegistro(destinatario: string, codigo: string)
     html,
   });
 }
+
+/** Código de 4 dígitos para restablecer la clave. */
+export async function enviarCodigoRecuperacion(destinatario: string, codigo: string): Promise<boolean> {
+  const asunto = 'Recuperar tu clave — TuMirada';
+  const texto = [
+    'Hola,',
+    '',
+    `Tu código para cambiar la clave es: ${codigo}`,
+    '',
+    'Ingresa este código de 4 dígitos en TuMirada y elige una clave nueva.',
+    '',
+    'Si no pediste recuperar la clave, ignora este mensaje.',
+  ].join('\n');
+
+  const html = `
+    <p>Hola,</p>
+    <p>Tu código para cambiar la clave en <strong>TuMirada</strong> es:</p>
+    <p style="font-size:28px;font-weight:bold;letter-spacing:4px;">${codigo}</p>
+    <p>Escríbelo en la app y elige una clave nueva.</p>
+    <p style="color:#666;font-size:12px;">Si no pediste recuperar la clave, ignora este correo.</p>
+  `;
+
+  return enviarCorreo({
+    fromName: 'TuMirada',
+    fromEmail: config.mailFrom.trim() || config.smtpUser.trim(),
+    to: destinatario,
+    subject: asunto,
+    text: texto,
+    html,
+  });
+}

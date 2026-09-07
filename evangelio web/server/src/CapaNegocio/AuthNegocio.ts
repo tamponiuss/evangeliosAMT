@@ -5,7 +5,7 @@ import { PerfilModel, RegistroCodigoModel } from '../capaConexion/Modelos.js';
 import { UsuarioNegocio } from './UsuarioNegocio.js';
 import { FielNegocio } from './FielNegocio.js';
 import type { LoginRequestDTO, LoginResponseDTO } from '../CapaDTO/UsuarioDTO.js';
-import { enviarCodigoRegistro } from '../CapaServicios/emailRegistro.js';
+import { enviarCodigoRegistro, enviarCodigoRecuperacion } from '../CapaServicios/emailRegistro.js';
 
 const payloadAdmin = (p: { idusuario: string; idperfil: string; nomPerfil: string }) => ({
   sub: p.idusuario,
@@ -83,7 +83,7 @@ export const AuthNegocio = {
     const expira = new Date(Date.now() + config.registroCodigoMinutos * 60 * 1000);
     await RegistroCodigoModel.findOneAndUpdate(
       { email: emailNorm },
-      { $set: { codigoHash, expira } },
+      { $set: { codigoHash, expira, tipo: 'registro' } },
       { upsert: true, new: true }
     );
     try {
@@ -129,6 +129,13 @@ export const AuthNegocio = {
       err.status = 400;
       throw err;
     }
+    if ((pendiente.tipo || 'registro') !== 'registro') {
+      const err: Error & { status?: number } = new Error(
+        'Ese código es para recuperar la clave. Pide un código de registro nuevo.'
+      );
+      err.status = 400;
+      throw err;
+    }
     if (pendiente.expira.getTime() < Date.now()) {
       await RegistroCodigoModel.deleteOne({ email: emailNorm });
       const err: Error & { status?: number } = new Error('El código expiró. Solicita uno nuevo.');
@@ -155,9 +162,103 @@ export const AuthNegocio = {
     });
     await RegistroCodigoModel.deleteOne({ email: emailNorm });
     const token = jwt.sign(payloadFiel({ email: fiel.email }), config.jwtSecret, {
-      expiresIn: config.jwtExpire as jwt.SignOptions['expiresIn'],
+      expiresIn: config.jwtExpireMovil as jwt.SignOptions['expiresIn'],
     });
     return { token, usuario: fiel };
+  },
+
+  async solicitarRecuperacionClaveMovil(email: string) {
+    const emailNorm = email.toLowerCase().trim();
+    if (!this._emailValido(emailNorm)) {
+      const err: Error & { status?: number } = new Error('Email no válido');
+      err.status = 400;
+      throw err;
+    }
+    const existe = await FielNegocio.obtenerConClave(emailNorm);
+    if (!existe) {
+      const err: Error & { status?: number } = new Error(
+        'No hay cuenta con este correo. Revisa el email o regístrate.'
+      );
+      err.status = 404;
+      throw err;
+    }
+    const codigo = this.generarCodigoRegistro4();
+    const codigoHash = await bcrypt.hash(codigo, 10);
+    const expira = new Date(Date.now() + config.registroCodigoMinutos * 60 * 1000);
+    await RegistroCodigoModel.findOneAndUpdate(
+      { email: emailNorm },
+      { $set: { codigoHash, expira, tipo: 'recuperacion' } },
+      { upsert: true, new: true }
+    );
+    try {
+      const correoEnviado = await enviarCodigoRecuperacion(emailNorm, codigo);
+      if (!correoEnviado) {
+        await RegistroCodigoModel.deleteOne({ email: emailNorm });
+        const err: Error & { status?: number } = new Error(
+          'No se pudo enviar el correo. Inténtalo más tarde.'
+        );
+        err.status = 503;
+        throw err;
+      }
+      return { ok: true as const, correoEnviado: true };
+    } catch (e) {
+      await RegistroCodigoModel.deleteOne({ email: emailNorm });
+      throw e;
+    }
+  },
+
+  async completarRecuperacionClaveMovil(email: string, codigo: string, claveNueva: string) {
+    const emailNorm = email.toLowerCase().trim();
+    const codigoTrim = String(codigo).replace(/\s/g, '');
+    if (!this._emailValido(emailNorm)) {
+      const err: Error & { status?: number } = new Error('Email no válido');
+      err.status = 400;
+      throw err;
+    }
+    if (!claveNueva || String(claveNueva).length < 4) {
+      const err: Error & { status?: number } = new Error('La clave nueva debe tener al menos 4 caracteres');
+      err.status = 400;
+      throw err;
+    }
+    if (!/^\d{4}$/.test(codigoTrim)) {
+      const err: Error & { status?: number } = new Error('El código debe tener 4 dígitos');
+      err.status = 400;
+      throw err;
+    }
+    const pendiente = await RegistroCodigoModel.findOne({ email: emailNorm }).lean();
+    if (!pendiente || (pendiente.tipo || 'registro') !== 'recuperacion') {
+      const err: Error & { status?: number } = new Error(
+        'No hay código de recuperación para este correo. Solicita uno nuevo.'
+      );
+      err.status = 400;
+      throw err;
+    }
+    if (pendiente.expira.getTime() < Date.now()) {
+      await RegistroCodigoModel.deleteOne({ email: emailNorm });
+      const err: Error & { status?: number } = new Error('El código expiró. Solicita uno nuevo.');
+      err.status = 400;
+      throw err;
+    }
+    const codigoOk = await bcrypt.compare(codigoTrim, pendiente.codigoHash);
+    if (!codigoOk) {
+      const err: Error & { status?: number } = new Error('Código incorrecto.');
+      err.status = 400;
+      throw err;
+    }
+    const fiel = await FielNegocio.obtenerConClave(emailNorm);
+    if (!fiel) {
+      await RegistroCodigoModel.deleteOne({ email: emailNorm });
+      const err: Error & { status?: number } = new Error('No hay cuenta con este correo.');
+      err.status = 404;
+      throw err;
+    }
+    await FielNegocio.actualizar(emailNorm, { clave: String(claveNueva) });
+    await RegistroCodigoModel.deleteOne({ email: emailNorm });
+    const actualizado = await FielNegocio.obtenerConClave(emailNorm);
+    const token = jwt.sign(payloadFiel({ email: emailNorm }), config.jwtSecret, {
+      expiresIn: config.jwtExpireMovil as jwt.SignOptions['expiresIn'],
+    });
+    return { token, usuario: FielNegocio.toPublicDTO(actualizado ?? fiel) };
   },
   async loginMovil(email: string, clave: string) {
     const fiel = await FielNegocio.obtenerConClave(email);
@@ -177,7 +278,7 @@ export const AuthNegocio = {
       throw err;
     }
     const token = jwt.sign(payloadFiel({ email: fiel.email }), config.jwtSecret, {
-      expiresIn: config.jwtExpire as jwt.SignOptions['expiresIn'],
+      expiresIn: config.jwtExpireMovil as jwt.SignOptions['expiresIn'],
     });
     return { token, usuario: FielNegocio.toPublicDTO(fiel) };
   },

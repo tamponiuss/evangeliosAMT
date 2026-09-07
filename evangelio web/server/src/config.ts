@@ -16,6 +16,8 @@ export const config = {
   mongoDatabase: process.env.MONGODB_DB || 'evangelios',
   jwtSecret: process.env.JWT_SECRET || 'evangelioweb-dev-cambiar-en-produccion',
   jwtExpire: process.env.JWT_EXPIRE || '8h',
+  /** Sesión de la app móvil (días). Quien ya entró vuelve al evangelio sin login. */
+  jwtExpireMovil: process.env.JWT_EXPIRE_MOVIL || '30d',
   /** Correo de salida (remitente) para códigos de registro. */
   mailFrom: process.env.MAIL_FROM || 'tamponievangelio@gmail.com',
   /** Usuario SMTP (Gmail): suele ser el mismo correo. */

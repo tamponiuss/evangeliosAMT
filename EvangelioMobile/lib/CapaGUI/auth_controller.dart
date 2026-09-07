@@ -16,14 +16,25 @@ class AuthController extends ChangeNotifier {
   Future<void> init() async {
     token = await _storage.getToken();
     usuario = await _storage.getUsuario();
-    if ((token == null || token!.isEmpty) && usuario == null) {
-      final cred = await _storage.getCredencialesRecordadas();
-      if (cred != null) {
-        try {
-          await login(cred.$1, cred.$2);
-        } catch (_) {
-          // Si las credenciales guardadas ya no son válidas, mantenemos flujo normal.
-        }
+    if (token != null && token!.isNotEmpty) {
+      try {
+        usuario = await _negocio.perfil(token!);
+        await _storage.setUsuario(usuario!);
+        cargando = false;
+        notifyListeners();
+        return;
+      } catch (_) {
+        token = null;
+        usuario = null;
+        await _storage.clear();
+      }
+    }
+    final cred = await _storage.getCredencialesRecordadas();
+    if (cred != null) {
+      try {
+        await login(cred.$1, cred.$2);
+      } catch (_) {
+        // Credenciales guardadas inválidas: se muestra la pantalla de entrada.
       }
     }
     cargando = false;
@@ -41,15 +52,24 @@ class AuthController extends ChangeNotifier {
 
   Future<void> registroConCodigo(String email, String clave, String codigo) async {
     final (t, u) = await _negocio.registroConCodigo(email, clave, codigo);
-    token = t;
-    usuario = u;
-    await _storage.setToken(t);
-    await _storage.setUsuario(u);
-    notifyListeners();
+    await _establecerSesion(t, u);
   }
 
   Future<void> login(String email, String clave) async {
     final (t, u) = await _negocio.login(email, clave);
+    await _establecerSesion(t, u);
+  }
+
+  Future<bool> solicitarRecuperacionClave(String email) async {
+    return _negocio.solicitarRecuperacionClave(email);
+  }
+
+  Future<void> completarRecuperacionClave(String email, String codigo, String claveNueva) async {
+    final (t, u) = await _negocio.completarRecuperacionClave(email, codigo, claveNueva);
+    await _establecerSesion(t, u);
+  }
+
+  Future<void> _establecerSesion(String t, UsuarioMovil u) async {
     token = t;
     usuario = u;
     await _storage.setToken(t);

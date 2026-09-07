@@ -33,6 +33,25 @@ class AuthNegocio {
     return ((r['token'] ?? '').toString(), _usuarioDesdeRespuesta(r['usuario']));
   }
 
+  Future<bool> solicitarRecuperacionClave(String email) async {
+    final r = await _api.post('/auth/movil/recuperar/solicitar-codigo', {'email': email});
+    if (r['correoEnviado'] == false) return false;
+    return true;
+  }
+
+  Future<(String, UsuarioMovil)> completarRecuperacionClave(
+    String email,
+    String codigo,
+    String claveNueva,
+  ) async {
+    final r = await _api.post('/auth/movil/recuperar/completar', {
+      'email': email,
+      'codigo': codigo,
+      'claveNueva': claveNueva,
+    });
+    return ((r['token'] ?? '').toString(), _usuarioDesdeRespuesta(r['usuario']));
+  }
+
   Future<UsuarioMovil> perfil(String token) async {
     final r = await _api.get('/auth/movil/perfil', token: token);
     return _usuarioDesdeRespuesta(r);
